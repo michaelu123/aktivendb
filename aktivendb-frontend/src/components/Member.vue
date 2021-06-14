@@ -205,7 +205,6 @@
                       <AddTeamToMemberDialog
                         :editWindow="editWindow"
                         :editedItem="editedItem"
-                        :editProjectTeamMemberNew="editProjectTeamMemberNew"
                         :memberRoles="memberRoles"
                         :allProjectTeams="allProjectTeams"
                         :strictReadonly="strictReadonly"
@@ -459,9 +458,6 @@ export default {
     };
   },
   computed: {
-    editProjectTeamMemberNew() {
-      return this.editWindow.teamList.editedProjectTeamMemberIndex == -1;
-    },
     today() {
       return new Date().toISOString().substring(0, 10);
     },

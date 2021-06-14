@@ -124,7 +124,6 @@ export default {
   props: [
     "editWindow",
     "editedItem",
-    "editProjectTeamMemberNew",
     "memberRoles",
     "allProjectTeams",
     "strictReadonly",
