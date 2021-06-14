@@ -1,880 +1,824 @@
 <template>
-    <v-card>
-        <v-card-title>
-            <div>
-                <v-alert
-                    :type="alert.type"
-                    outlined
-                    v-model="alert.shown"
-                    dismissible
-                    width="100%"
-                >
-                    {{ alert.text }}
-                </v-alert>
-            </div>
-        </v-card-title>
-        <v-data-table
-            :headers="headers"
-            :items="members"
-            :search="search"
-            :loading="loading"
-            loading-text="Wird geladen..."
-            @click:row="viewItem"
+  <v-card>
+    <v-card-title>
+      <div>
+        <v-alert
+          :type="alert.type"
+          outlined
+          v-model="alert.shown"
+          dismissible
+          width="100%"
         >
-            <template v-slot:top>
-                <v-dialog v-model="editWindow.shown">
+          {{ alert.text }}
+        </v-alert>
+      </div>
+    </v-card-title>
+    <v-data-table
+      :headers="headers"
+      :items="members"
+      :search="search"
+      :loading="loading"
+      loading-text="Wird geladen..."
+      @click:row="viewItem"
+    >
+      <template v-slot:top>
+        <v-dialog v-model="editWindow.shown">
+          <template v-slot:activator="{ on }">
+            <v-btn
+              color="primary"
+              outlined
+              class="mb-2"
+              v-on="on"
+              v-if="!strictReadonly"
+            >
+              <v-icon left>add</v-icon> Hinzufügen
+            </v-btn>
+          </template>
+          <v-card>
+            <v-card-title>
+              <span class="headline">Mitglied</span>
+            </v-card-title>
+
+            <v-card-text v-if="editWindow.loading">
+              Wird geladen...
+              <v-progress-circular
+                indeterminate
+                color="primary"
+              ></v-progress-circular>
+            </v-card-text>
+
+            <v-card-text v-if="!editWindow.loading">
+              <v-container>
+                <v-form
+                  ref="form"
+                  v-model="editWindow.formValid"
+                  lazy-validation
+                >
+                  <v-text-field
+                    v-model="editedItem.name"
+                    label="Name"
+                    required
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.name"
+                    :error-messages="editWindow.errors.name"
+                  ></v-text-field>
+                  <v-text-field
+                    v-model="editedItem.email_adfc"
+                    label="E-mail (ADFC)"
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.email_adfc"
+                    :error-messages="editWindow.errors.email_adfc"
+                  ></v-text-field>
+                  <v-text-field
+                    v-model="editedItem.email_private"
+                    label="E-mail (Privat)"
+                    required
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.email_private"
+                    :error-messages="editWindow.errors.email_private"
+                  ></v-text-field>
+                  <v-text-field
+                    v-model="editedItem.phone_primary"
+                    label="Telefon"
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.phone_primary"
+                    :error-messages="editWindow.errors.phone_primary"
+                  ></v-text-field>
+                  <v-text-field
+                    v-model="editedItem.phone_secondary"
+                    label="Telefon (alternativ)"
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.phone_secondary"
+                    :error-messages="editWindow.errors.phone_secondary"
+                  ></v-text-field>
+                  <v-menu
+                    v-model="editWindow.showLatestContactDatePicker"
+                    :close-on-content-click="false"
+                    :nudge-right="40"
+                    transition="scale-transition"
+                    offset-y
+                    min-width="290px"
+                    :disabled="editWindow.readonly"
+                  >
                     <template v-slot:activator="{ on }">
-                        <v-btn
-                            color="primary"
-                            outlined
-                            class="mb-2"
-                            v-on="on"
-                            v-if="!strictReadonly"
-                        >
-                            <v-icon left>add</v-icon> Hinzufügen
-                        </v-btn>
+                      <v-text-field
+                        v-model="editedItem.latest_contact"
+                        label="Letzter Kontakt"
+                        prepend-icon="event"
+                        readonly
+                        v-on="on"
+                        :error="!!editWindow.errors.latest_contact"
+                        :error-messages="editWindow.errors.latest_contact"
+                      ></v-text-field>
                     </template>
-                    <v-card>
-                        <v-card-title>
-                            <span class="headline">Mitglied</span>
-                        </v-card-title>
+                    <v-date-picker
+                      v-model="editedItem.latest_contact"
+                      @input="editWindow.showLatestContactDatePicker = false"
+                      locale="de-de"
+                      :max="today"
+                    ></v-date-picker>
+                  </v-menu>
+                  <v-textarea
+                    v-model="editedItem.address"
+                    label="Adresse"
+                    rows="2"
+                    auto-grow
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.address"
+                    :error-messages="editWindow.errors.address"
+                  ></v-textarea>
+                  <v-text-field
+                    v-model="editedItem.adfc_id"
+                    label="Mitgliedsnummer"
+                    type="number"
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.adfc_id"
+                    :error-messages="editWindow.errors.adfc_id"
+                  ></v-text-field>
+                  <v-textarea
+                    v-model="editedItem.admin_comments"
+                    label="Kommentar"
+                    rows="2"
+                    auto-grow
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.admin_comments"
+                    :error-messages="editWindow.errors.admin_comments"
+                  ></v-textarea>
+                  <v-menu
+                    v-model="editWindow.showLatestFirstAidTrainingDatePicker"
+                    :close-on-content-click="false"
+                    :nudge-right="40"
+                    transition="scale-transition"
+                    offset-y
+                    min-width="290px"
+                    :disabled="editWindow.readonly"
+                  >
+                    <template v-slot:activator="{ on }">
+                      <v-text-field
+                        v-model="editedItem.latest_first_aid_training"
+                        label="Letzte 1. Hilfe Schulung"
+                        prepend-icon="event"
+                        readonly
+                        v-on="on"
+                        :error="!!editWindow.errors.latest_first_aid_training"
+                        :error-messages="
+                          editWindow.errors.latest_first_aid_training
+                        "
+                      ></v-text-field>
+                    </template>
+                    <v-date-picker
+                      v-model="editedItem.latest_first_aid_training"
+                      @input="
+                        editWindow.showLatestFirstAidTrainingDatePicker = false
+                      "
+                      locale="de-de"
+                      :max="today"
+                    ></v-date-picker>
+                  </v-menu>
+                  <v-textarea
+                    v-model="editedItem.interests"
+                    label="Interessen"
+                    rows="2"
+                    auto-grow
+                    :readonly="editWindow.readonly"
+                    :error="!!editWindow.errors.interests"
+                    :error-messages="editWindow.errors.interests"
+                  ></v-textarea>
+                  <v-switch
+                    v-model="editedItem.active"
+                    label="Aktiv"
+                    :disabled="editWindow.readonly"
+                    :value-comparator="checkForTrue"
+                    :error="!!editWindow.errors.active"
+                    :error-messages="editWindow.errors.active"
+                  ></v-switch>
+                </v-form>
+                <template v-if="editedItem.id > 0">
+                  <v-data-table
+                    :headers="editWindow.teamList.headers"
+                    :items="projectTeams"
+                    :search="searchEditWindow"
+                    @click:row="viewProjectTeamMemberItem"
 
-                        <v-card-text v-if="editWindow.loading">
-                            Wird geladen...
-                            <v-progress-circular
-                                indeterminate
-                                color="primary"
-                            ></v-progress-circular>
-                        </v-card-text>
-
-                        <v-card-text v-if="!editWindow.loading">
-                            <v-container>
-                                <v-form
-                                    ref="form"
-                                    v-model="editWindow.formValid"
-                                    lazy-validation
-                                >
-                                    <v-text-field
-                                        v-model="editedItem.name"
-                                        label="Name"
-                                        required
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.name"
-                                        :error-messages="editWindow.errors.name"
-                                    ></v-text-field>
-                                    <v-text-field
-                                        v-model="editedItem.email_adfc"
-                                        label="E-mail (ADFC)"
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.email_adfc"
-                                        :error-messages="editWindow.errors.email_adfc"
-                                    ></v-text-field>
-                                    <v-text-field
-                                        v-model="editedItem.email_private"
-                                        label="E-mail (Privat)"
-                                        required
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.email_private"
-                                        :error-messages="editWindow.errors.email_private"
-                                    ></v-text-field>
-                                    <v-text-field
-                                        v-model="editedItem.phone_primary"
-                                        label="Telefon"
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.phone_primary"
-                                        :error-messages="editWindow.errors.phone_primary"
-                                    ></v-text-field>
-                                    <v-text-field
-                                        v-model="editedItem.phone_secondary"
-                                        label="Telefon (alternativ)"
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.phone_secondary"
-                                        :error-messages="editWindow.errors.phone_secondary"
-                                    ></v-text-field>
-                                    <v-menu
-                                        v-model="editWindow.showLatestContactDatePicker"
-                                        :close-on-content-click="false"
-                                        :nudge-right="40"
-                                        transition="scale-transition"
-                                        offset-y
-                                        min-width="290px"
-                                        :disabled="editWindow.readonly"
-                                    >
-                                        <template v-slot:activator="{ on }">
-                                            <v-text-field
-                                                v-model="editedItem.latest_contact"
-                                                label="Letzter Kontakt"
-                                                prepend-icon="event"
-                                                readonly
-                                                v-on="on"
-                                                :error="!!editWindow.errors.latest_contact"
-                                                :error-messages="editWindow.errors.latest_contact"
-                                            ></v-text-field>
-                                        </template>
-                                        <v-date-picker
-                                            v-model="editedItem.latest_contact"
-                                            @input="editWindow.showLatestContactDatePicker = false"
-                                            locale="de-de"
-                                            :max="today"
-                                        ></v-date-picker>
-                                    </v-menu>
-                                    <v-textarea
-                                        v-model="editedItem.address"
-                                        label="Adresse"
-                                        rows="2"
-                                        auto-grow
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.address"
-                                        :error-messages="editWindow.errors.address"
-                                    ></v-textarea>
-                                    <v-text-field
-                                        v-model="editedItem.adfc_id"
-                                        label="Mitgliedsnummer"
-                                        type="number"
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.adfc_id"
-                                        :error-messages="editWindow.errors.adfc_id"
-                                    ></v-text-field>
-                                    <v-textarea
-                                        v-model="editedItem.admin_comments"
-                                        label="Kommentar"
-                                        rows="2"
-                                        auto-grow
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.admin_comments"
-                                        :error-messages="editWindow.errors.admin_comments"
-                                    ></v-textarea>
-                                    <v-menu
-                                        v-model="editWindow.showLatestFirstAidTrainingDatePicker"
-                                        :close-on-content-click="false"
-                                        :nudge-right="40"
-                                        transition="scale-transition"
-                                        offset-y
-                                        min-width="290px"
-                                        :disabled="editWindow.readonly"
-                                    >
-                                        <template v-slot:activator="{ on }">
-                                            <v-text-field
-                                                v-model="editedItem.latest_first_aid_training"
-                                                label="Letzte 1. Hilfe Schulung"
-                                                prepend-icon="event"
-                                                readonly
-                                                v-on="on"
-                                                :error="!!editWindow.errors.latest_first_aid_training"
-                                                :error-messages="editWindow.errors.latest_first_aid_training"
-                                            ></v-text-field>
-                                        </template>
-                                        <v-date-picker
-                                            v-model="editedItem.latest_first_aid_training"
-                                            @input="editWindow.showLatestFirstAidTrainingDatePicker = false"
-                                            locale="de-de"
-                                            :max="today"
-                                        ></v-date-picker>
-                                    </v-menu>
-                                    <v-textarea
-                                        v-model="editedItem.interests"
-                                        label="Interessen"
-                                        rows="2"
-                                        auto-grow
-                                        :readonly="editWindow.readonly"
-                                        :error="!!editWindow.errors.interests"
-                                        :error-messages="editWindow.errors.interests"
-                                    ></v-textarea>
-                                    <v-switch
-                                        v-model="editedItem.active"
-                                        label="Aktiv"
-                                        :disabled="editWindow.readonly"
-                                        :value-comparator="checkForTrue"
-                                        :error="!!editWindow.errors.active"
-                                        :error-messages="editWindow.errors.active"
-                                    ></v-switch>
-                                </v-form>
-                                <template v-if="editedItem.id > 0">
-                                    <v-data-table
-                                        :headers="editWindow.teamList.headers"
-                                        :items="projectTeams"
-                                        :search="searchEditWindow"
-                                        @click:row="viewProjectTeamMemberItem"
-                                    >
-                                        <template v-slot:top>
-                                            <v-dialog v-model="editWindow.teamList.editProjectTeamMemberWindow.shown">
-                                                <template v-slot:activator="{ on }">
-                                                    <v-btn
-                                                        color="primary"
-                                                        outlined
-                                                        class="mb-2"
-                                                        v-on="on"
-                                                        v-if="!strictReadonly"
-                                                    >
-                                                        <v-icon left>add</v-icon> Hinzufügen
-                                                    </v-btn>
-                                                </template>
-                                                <v-card>
-                                                    <v-card-title>
-                                                        <span class="headline">Mitgliedschaft</span>
-                                                    </v-card-title>
-
-                                                    <v-card-text>
-                                                        <v-container>
-                                                            <v-form
-                                                                ref="form"
-                                                                v-model="editWindow.teamList.editProjectTeamMemberWindow.formValid"
-                                                                lazy-validation
-                                                            >
-                                                                <v-select
-                                                                    v-model="editWindow.teamList.editedProjectTeamMember.project_team_member.member_role_id"
-                                                                    :items="memberRoles"
-                                                                    item-text="title"
-                                                                    item-value="id"
-                                                                    label="Rolle"
-                                                                    :readonly="editWindow.teamList.editProjectTeamMemberWindow.readonly"
-                                                                    :error="!!editWindow.teamList.editProjectTeamMemberWindow.errors.member_role_id"
-                                                                    :error-messages="editWindow.teamList.editProjectTeamMemberWindow.errors.member_role_id"
-                                                                ></v-select>
-                                                                <v-text-field
-                                                                    v-model="editedItem.name"
-                                                                    label="Person"
-                                                                    readonly
-                                                                ></v-text-field>
-                                                                <v-select
-                                                                    v-if="editProjectTeamMemberNew"
-                                                                    v-model="editWindow.teamList.editedProjectTeamMember.project_team_member.project_team_id"
-                                                                    :items="allProjectTeams"
-                                                                    item-text="name"
-                                                                    item-value="id"
-                                                                    label="AG/Gruppe"
-                                                                    :readonly="editWindow.teamList.editProjectTeamMemberWindow.readonly"
-                                                                    :error="!!editWindow.teamList.editProjectTeamMemberWindow.errors.project_team_id"
-                                                                    :error-messages="editWindow.teamList.editProjectTeamMemberWindow.errors.project_team_id"
-                                                                ></v-select>
-                                                                <v-text-field
-                                                                    v-if="!editProjectTeamMemberNew"
-                                                                    v-model="editWindow.teamList.editedProjectTeamMember.name"
-                                                                    label="AG/Gruppe"
-                                                                    readonly
-                                                                ></v-text-field>
-                                                                <v-textarea
-                                                                    v-model="editWindow.teamList.editedProjectTeamMember.project_team_member.admin_comments"
-                                                                    label="Kommentar"
-                                                                    rows="3"
-                                                                    auto-grow
-                                                                    :readonly="editWindow.teamList.editProjectTeamMemberWindow.readonly"
-                                                                    :error="!!editWindow.teamList.editProjectTeamMemberWindow.errors.admin_comments"
-                                                                    :error-messages="editWindow.teamList.editProjectTeamMemberWindow.errors.admin_comments"
-                                                                ></v-textarea>
-                                                            </v-form>
-                                                        </v-container>
-                                                    </v-card-text>
-
-                                                    <v-card-actions>
-                                                        <v-spacer></v-spacer>
-                                                        <v-btn
-                                                            text
-                                                            @click="closeEditProjectTeamMemberWindow"
-                                                        >Abbrechen</v-btn>
-                                                        <v-btn
-                                                            text
-                                                            @click="saveEditProjectTeamMemberWindow"
-                                                            :loading="editWindow.teamList.editProjectTeamMemberWindow.saveInProgress"
-                                                            v-if="!editWindow.teamList.editProjectTeamMemberWindow.readonly"
-                                                        >Speichern</v-btn>
-                                                    </v-card-actions>
-                                                </v-card>
-                                            </v-dialog>
-                                            <v-spacer></v-spacer>
-                                            <v-text-field
-                                                v-model="searchEditWindow"
-                                                label="Suchen"
-                                                append-icon="search"
-                                                single-line
-                                                hide-details
-                                            ></v-text-field>
-                                        </template>
-                                        <template v-slot:item.action="{ item }">
-                                            <v-icon
-                                                small
-                                                class="mr-2"
-                                                @click.stop="editProjectTeamMemberItem(item)"
-                                                v-if="!strictReadonly"
-                                            >
-                                                edit
-                                            </v-icon>
-                                            <v-icon
-                                                small
-                                                @click.stop="deleteProjectTeamMemberItem(item)"
-                                                v-if="!strictReadonly"
-                                            >
-                                                delete
-                                            </v-icon>
-                                        </template>
-                                    </v-data-table>
-                                </template>
-                            </v-container>
-                        </v-card-text>
-
-                        <v-card-actions>
-                            <v-spacer></v-spacer>
-                            <v-btn
-                                text
-                                @click="closeEditWindow"
-                            >Abbrechen</v-btn>
-                            <v-btn
-                                text
-                                @click="saveEditWindow"
-                                :loading="editWindow.saveInProgress"
-                                v-if="!editWindow.readonly"
-                            >Speichern</v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
-                <v-spacer></v-spacer>
-                <v-switch
-                    v-model="activeSwitch"
-                    label="Nur Aktive"
-                >
-                </v-switch>
-                <v-spacer></v-spacer>
-                <v-text-field
-                    v-model="search"
-                    label="Suchen"
-                    append-icon="search"
-                    single-line
-                    hide-details
-                ></v-text-field>
-            </template>
-            <template v-slot:item.action="{ item }">
-                <v-icon
-                    small
-                    class="mr-2"
-                    @click.stop="editItem(item)"
-                    v-if="!strictReadonly"
-                >
-                    edit
-                </v-icon>
-                <v-icon
-                    small
-                    @click.stop="deleteItem(item)"
-                    v-if="!strictReadonly"
-                >
-                    delete
-                </v-icon>
-            </template>
-            <template v-slot:item.active="{ item }">
-                <v-avatar
-                    color="green"
-                    size="24"
-                    v-if="checkForTrue(item.active)"
-                >
-                    <v-icon
+                  >
+                    <template v-slot:top>
+                      <AddTeamToMemberDialog
+                        :editWindow="editWindow"
+                        :editedItem="editedItem"
+                        :editProjectTeamMemberNew="editProjectTeamMemberNew"
+                        :memberRoles="memberRoles"
+                        :allProjectTeams="allProjectTeams"
+                        :strictReadonly="strictReadonly"
+                        @closeTM="closeEditProjectTeamMemberWindow"
+                        @saveTM="saveEditProjectTeamMemberWindow"
+                      ></AddTeamToMemberDialog>
+                      <v-spacer></v-spacer>
+                      <v-text-field
+                        v-model="searchEditWindow"
+                        label="Suchen"
+                        append-icon="search"
+                        single-line
+                        hide-details
+                      ></v-text-field>
+                    </template>
+                    <template v-slot:item.action="{ item }">
+                      <v-icon
                         small
-                        dense
-                        class="white--text"
-                    >
-                        mdi-checkbox-marked-circle-outline
-                    </v-icon>
-                </v-avatar>
-                <v-avatar
-                    color="red"
-                    size="24"
-                    v-if="!checkForTrue(item.active)"
-                >
-                    <v-icon
+                        class="mr-2"
+                        @click.stop="editProjectTeamMemberItem(item)"
+                        v-if="!strictReadonly"
+                      >
+                        edit
+                      </v-icon>
+                      <v-icon
                         small
-                        dense
-                        class="white--text"
-                    >
-                        mdi-checkbox-blank-circle-outline
-                    </v-icon>
-                </v-avatar>
-            </template>
-        </v-data-table>
-    </v-card>
+                        @click.stop="deleteProjectTeamMemberItem(item)"
+                        v-if="!strictReadonly"
+                      >
+                        delete
+                      </v-icon>
+                    </template>
+                  </v-data-table>
+                </template>
+              </v-container>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn text @click="closeEditWindow">Abbrechen</v-btn>
+              <v-btn
+                text
+                @click="saveEditWindow"
+                :loading="editWindow.saveInProgress"
+                v-if="!editWindow.readonly"
+                >Speichern</v-btn
+              >
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-spacer></v-spacer>
+        <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="search"
+          label="Suchen"
+          append-icon="search"
+          single-line
+          hide-details
+        ></v-text-field>
+      </template>
+      <template v-slot:item.action="{ item }">
+        <v-icon
+          small
+          class="mr-2"
+          @click.stop="editItem(item)"
+          v-if="!strictReadonly"
+        >
+          edit
+        </v-icon>
+        <v-icon small @click.stop="deleteItem(item)" v-if="!strictReadonly">
+          delete
+        </v-icon>
+      </template>
+      <template v-slot:item.active="{ item }">
+        <v-avatar color="green" size="24" v-if="checkForTrue(item.active)">
+          <v-icon small dense class="white--text">
+            mdi-checkbox-marked-circle-outline
+          </v-icon>
+        </v-avatar>
+        <v-avatar color="red" size="24" v-if="!checkForTrue(item.active)">
+          <v-icon small dense class="white--text">
+            mdi-checkbox-blank-circle-outline
+          </v-icon>
+        </v-avatar>
+      </template>
+    </v-data-table>
+  </v-card>
 </template>
 
 <script>
-  export default {
-    name: "Member",
-    data () {
-      return {
-        search: '',
-        strictReadonly: false,
-        searchEditWindow: '',
-        activeSwitch: true,
-        loading: true,
-        editWindow: {
-          loading: false,
-          shown: false,
-          readonly: false,
-          formValid: true,
-          saveInProgress: false,
-          errors: {},
-          showLatestContactDatePicker: false,
-          showLatestFirstAidTrainingDatePicker: false,
-          teamList: {
-            headers: [
-              {
-                text: 'Actions',
-                value: 'action',
-                sortable: false,
-                filterable: false,
-              },
-              {
-                text: 'AG',
-                value: 'name',
-              },
-              {
-                text: 'Funktion',
-                value: 'project_team_member.member_role_title',
-              },
-            ],
-            editProjectTeamMemberWindow: {
-              shown: false,
-              readonly: false,
-              formValid: true,
-              saveInProgress: false,
-              errors: {},
+import AddTeamToMemberDialog from "./AddTeamToMemberDialog.vue";
+import AddMemberToMembersDialog from "./AddMemberToMembersDialog.vue";
+export default {
+  components: { AddTeamToMemberDialog, AddMemberToMembersDialog },
+  name: "Member",
+  data() {
+    return {
+      search: "",
+      strictReadonly: false,
+      searchEditWindow: "",
+      activeSwitch: true,
+      loading: true,
+      editWindow: {
+        loading: false,
+        shown: false,
+        readonly: false,
+        formValid: true,
+        saveInProgress: false,
+        errors: {},
+        showLatestContactDatePicker: false,
+        showLatestFirstAidTrainingDatePicker: false,
+        teamList: {
+          headers: [
+            {
+              text: "Actions",
+              value: "action",
+              sortable: false,
+              filterable: false,
             },
-            editedProjectTeamMemberIndex: -1,
-            editedProjectTeamMember: {
-              project_team_member: {
-                admin_comments: "",
-                id: -1,
-                member_id: -1,
-                member_role_id: -1,
-                member_role_title: "",
-                project_team_id: -1
-              },
-              name: ""
+            {
+              text: "AG",
+              value: "name",
             },
-            defaultProjectTeamMember: {
-              project_team_member: {
-                admin_comments: "",
-                id: -1,
-                member_id: -1,
-                member_role_id: -1,
-                member_role_title: "",
-                project_team_id: -1
-              },
-              name: ""
+            {
+              text: "Funktion",
+              value: "project_team_member.member_role_title",
             },
-          }
-        },
-        alert: {
-          shown: false,
-          text: "",
-          type: "success"
-        },
-        headers: [
-          {
-            text: 'Actions',
-            value: 'action',
-            sortable: false,
-            filterable: false,
+          ],
+          editProjectTeamMemberWindow: {
+            shown: false,
+            readonly: false,
+            formValid: true,
+            saveInProgress: false,
+            errors: {},
           },
-          {
-            text: 'Aktiv',
-            value: 'active',
-            filter: value => {
-              if (!this.activeSwitch) return true;
+          editedProjectTeamMemberIndex: -1,
+          editedProjectTeamMember: {
+            project_team_member: {
+              admin_comments: "",
+              id: -1,
+              member_id: -1,
+              member_role_id: -1,
+              member_role_title: "",
+              project_team_id: -1,
+            },
+            name: "",
+          },
+          defaultProjectTeamMember: {
+            project_team_member: {
+              admin_comments: "",
+              id: -1,
+              member_id: -1,
+              member_role_id: -1,
+              member_role_title: "",
+              project_team_id: -1,
+            },
+            name: "",
+          },
+        },
+      },
+      alert: {
+        shown: false,
+        text: "",
+        type: "success",
+      },
+      headers: [
+        {
+          text: "Actions",
+          value: "action",
+          sortable: false,
+          filterable: false,
+        },
+        {
+          text: "Aktiv",
+          value: "active",
+          filter: (value) => {
+            if (!this.activeSwitch) return true;
 
-              return this.checkForTrue(value);
-            },
+            return this.checkForTrue(value);
           },
-          {
-            text: 'Name',
-            value: 'name'
-          },
-          {
-            text: 'E-Mail (Privat)',
-            value: 'email_private'
-          },
-          {
-            text: 'E-Mail (ADFC)',
-            value: 'email_adfc'
-          },
-          {
-            text: 'Telefon',
-            value: 'phone_primary'
-          },
-          {
-            text: 'Letzter Kontakt',
-            value: 'latest_contact'
-          },
-          {
-            text: 'Letzte 1. Hilfe Schulung',
-            value: 'latest_first_aid_training'
-          }
-        ],
-        editedIndex: -1,
-        members: [],
-        allProjectTeams: [],
-        projectTeams: [],
-        editedItem: {
-          id: -1,
-          name: "",
-          email_adfc: "",
-          email_private: "",
-          phone_primary: "",
-          phone_secondary: "",
-          address: "",
-          adfc_id: "0",
-          admin_comments: "",
-          reference: "",
-          latest_first_aid_training: null,
-          gender: "",
-          interests: "",
-          latest_contact: null,
-          active: 1,
-          user: null,
-          project_teams: []
         },
-        defaultItem: {
-          id: -1,
-          name: "",
-          email_adfc: "",
-          email_private: "",
-          phone_primary: "",
-          phone_secondary: "",
-          address: "",
-          adfc_id: "0",
-          admin_comments: "",
-          reference: "",
-          latest_first_aid_training: null,
-          gender: "",
-          interests: "",
-          latest_contact: null,
-          active: 1,
-          user: null,
-          project_teams: []
+        {
+          text: "Name",
+          value: "name",
         },
-        memberRoles: [],
+        {
+          text: "E-Mail (Privat)",
+          value: "email_private",
+        },
+        {
+          text: "E-Mail (ADFC)",
+          value: "email_adfc",
+        },
+        {
+          text: "Telefon",
+          value: "phone_primary",
+        },
+        {
+          text: "Letzter Kontakt",
+          value: "latest_contact",
+        },
+        {
+          text: "Letzte 1. Hilfe Schulung",
+          value: "latest_first_aid_training",
+        },
+      ],
+      editedIndex: -1,
+      members: [],
+      allProjectTeams: [],
+      projectTeams: [],
+      editedItem: {
+        id: -1,
+        name: "",
+        email_adfc: "",
+        email_private: "",
+        phone_primary: "",
+        phone_secondary: "",
+        address: "",
+        adfc_id: "0",
+        admin_comments: "",
+        reference: "",
+        latest_first_aid_training: null,
+        gender: "",
+        interests: "",
+        latest_contact: null,
+        active: 1,
+        user: null,
+        project_teams: [],
+      },
+      defaultItem: {
+        id: -1,
+        name: "",
+        email_adfc: "",
+        email_private: "",
+        phone_primary: "",
+        phone_secondary: "",
+        address: "",
+        adfc_id: "0",
+        admin_comments: "",
+        reference: "",
+        latest_first_aid_training: null,
+        gender: "",
+        interests: "",
+        latest_contact: null,
+        active: 1,
+        user: null,
+        project_teams: [],
+      },
+      memberRoles: [],
+    };
+  },
+  computed: {
+    editProjectTeamMemberNew() {
+      return this.editWindow.teamList.editedProjectTeamMemberIndex == -1;
+    },
+    today() {
+      return new Date().toISOString().substring(0, 10);
+    },
+  },
+  watch: {
+    "editWindow.shown": {
+      deep: true,
+      handler: function(val) {
+        val || this.closeEditWindow();
+      },
+    },
+    "editWindow.teamList.editProjectTeamMemberWindow.shown": {
+      deep: true,
+      handler: function(val) {
+        val || this.closeEditProjectTeamMemberWindow();
+      },
+    },
+    "editedItem.project_teams": {
+      deep: true,
+      handler: function(val) {
+        if (!val) val = [];
+        this.projectTeams = val;
+      },
+    },
+  },
+  mounted() {
+    this.strictReadonly = sessionStorage.getItem("readonly") == 1;
+    this.getMembersFromApi().then((data) => {
+      this.members = data.items;
+    });
+    this.getMemberRolesFromApi().then((data) => {
+      this.memberRoles = data.items;
+    });
+    this.getAllProjectTeamsFromApi().then((data) => {
+      this.allProjectTeams = data.items;
+    });
+  },
+  methods: {
+    handleRequestError(error, scope) {
+      this.is_logged_in = false;
+      if (error.response) {
+        console.log(error.response);
+        switch (error.response.status) {
+          case 401:
+            this.$router.push("login");
+            break;
+          case 422:
+            scope.saveInProgress = false;
+            scope.errors = error.response.data;
+            break;
+          default:
+            this.showAlert("error", "Unbekannter Fehler");
+        }
+      } else if (error.request) {
+        this.$router.push("login");
+      } else {
+        this.$router.push("login");
       }
     },
-    computed: {
-      editProjectTeamMemberNew () {
-        return (this.editWindow.teamList.editedProjectTeamMemberIndex == -1);
-      },
-      today () {
-        return new Date().toISOString().substring(0,10);
+    checkForTrue(val) {
+      if (val === true || val == "1" || val == 1) {
+        return true;
+      } else {
+        return false;
       }
     },
-    watch: {
-      'editWindow.shown': {
-        deep: true,
-        handler: function (val) {
-          val || this.closeEditWindow();
-        },
-      },
-      'editWindow.teamList.editProjectTeamMemberWindow.shown': {
-        deep: true,
-        handler: function (val) {
-          val || this.closeEditProjectTeamMemberWindow();
-        },
-      },
-      'editedItem.project_teams': {
-        deep:true,
-        handler: function(val) {
-          if (!val) val=[];
-          this.projectTeams = val;
-        }
-      },
-    },
-    mounted () {
-      this.strictReadonly = (sessionStorage.getItem('readonly') == 1);
-      this.getMembersFromApi()
-        .then(data => {
-          this.members = data.items;
-        });
-      this.getMemberRolesFromApi()
-        .then(data => {
-          this.memberRoles = data.items;
-        });
-      this.getAllProjectTeamsFromApi()
-        .then(data => {
-          this.allProjectTeams = data.items;
-        })
-    },
-    methods: {
-      handleRequestError(error, scope) {
-        this.is_logged_in = false;
-        if(error.response) {
-          console.log(error.response);
-          switch (error.response.status) {
-            case 401:
-              this.$router.push('login');
-              break;
-            case 422:
-              scope.saveInProgress = false;
-              scope.errors = error.response.data;
-              break;
-            default:
-              this.showAlert("error", "Unbekannter Fehler");
-          }
-        } else if(error.request) {
-          this.$router.push('login');
-        } else {
-          this.$router.push('login');
-        }
-      },
-      checkForTrue(val) {
-        if (val === true || val == "1" || val == 1) {
-          return true;
-        }
-        else {
-          return false;
-        }
-      },
-      getMembersFromApi() {
-        var me = this;
-        me.loading = true;
+    getMembersFromApi() {
+      var me = this;
+      me.loading = true;
 
-        return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
+        let items = [];
 
-          let items = [];
+        this.$http
+          .get("/api/members?token=" + sessionStorage.getItem("token"))
+          .then(function(response) {
+            me.loading = false;
+            items = response.data;
 
-          this.$http.get('/api/members?token=' + sessionStorage.getItem('token'))
-            .then(function (response) {
-              me.loading = false;
-              items = response.data;
-
-              resolve({items});
-            })
-            .catch(function (error) {
-              me.handleRequestError(error);
-              reject("Error");
-            });
-        })
-      },
-      getMemberRolesFromApi() {
-        return new Promise((resolve, reject) => {
-
-          var me = this;
-          let items = [];
-
-          this.$http.get('/api/member-roles?token=' + sessionStorage.getItem('token'))
-            .then(function (response) {
-              items = response.data;
-
-              resolve({items});
-            })
-            .catch(function (error) {
-              me.handleRequestError(error);
-              reject("Error");
-            });
-        })
-      },
-      getAllProjectTeamsFromApi() {
-        return new Promise((resolve, reject) => {
-
-          var me = this;
-          let items = [];
-
-          this.$http.get('/api/project-teams?token=' + sessionStorage.getItem('token'))
-            .then(function (response) {
-              items = response.data;
-
-              resolve({items});
-            })
-            .catch(function (error) {
-              me.handleRequestError(error);
-              reject("Error");
-            });
-        })
-      },
-      showAlert(type, text) {
-        this.alert.shown = true;
-        this.alert.type = type;
-        this.alert.text = text;
-
-        setTimeout(() => {
-          this.alert.shown = false;
-        }, 5000);
-      },
-      showItem (item) {
-        this.editedIndex = this.members.indexOf(item);
-        this.editWindow.loading = true;
-        var memberId = this.members[this.editedIndex].id;
-        var me = this;
-
-        this.$http.get('/api/member/' + memberId + '?token=' + sessionStorage.getItem('token'))
-          .then(function (response) {
-            me.editWindow.loading = false;
-            Object.assign(me.members[me.editedIndex], response.data);
-            me.editedItem = Object.assign(item, response.data);
+            resolve({ items });
           })
-          .catch(function (error) {
+          .catch(function(error) {
+            me.handleRequestError(error);
+            reject("Error");
+          });
+      });
+    },
+    getMemberRolesFromApi() {
+      return new Promise((resolve, reject) => {
+        var me = this;
+        let items = [];
+
+        this.$http
+          .get("/api/member-roles?token=" + sessionStorage.getItem("token"))
+          .then(function(response) {
+            items = response.data;
+
+            resolve({ items });
+          })
+          .catch(function(error) {
+            me.handleRequestError(error);
+            reject("Error");
+          });
+      });
+    },
+    getAllProjectTeamsFromApi() {
+      return new Promise((resolve, reject) => {
+        var me = this;
+        let items = [];
+
+        this.$http
+          .get("/api/project-teams?token=" + sessionStorage.getItem("token"))
+          .then(function(response) {
+            items = response.data;
+
+            resolve({ items });
+          })
+          .catch(function(error) {
+            me.handleRequestError(error);
+            reject("Error");
+          });
+      });
+    },
+    showAlert(type, text) {
+      this.alert.shown = true;
+      this.alert.type = type;
+      this.alert.text = text;
+
+      setTimeout(() => {
+        this.alert.shown = false;
+      }, 5000);
+    },
+    showItem(item) {
+      this.editedIndex = this.members.indexOf(item);
+      this.editWindow.loading = true;
+      var memberId = this.members[this.editedIndex].id;
+      var me = this;
+
+      this.$http
+        .get(
+          "/api/member/" +
+            memberId +
+            "?token=" +
+            sessionStorage.getItem("token"),
+        )
+        .then(function(response) {
+          me.editWindow.loading = false;
+          Object.assign(me.members[me.editedIndex], response.data);
+          me.editedItem = Object.assign(item, response.data);
+        })
+        .catch(function(error) {
+          me.handleRequestError(error);
+        });
+      this.editWindow.shown = true;
+    },
+    viewItem(item) {
+      this.showItem(item);
+      this.editWindow.readonly = true;
+    },
+    editItem(item) {
+      this.showItem(item);
+      this.editWindow.readonly = this.strictReadonly || false;
+    },
+    deleteItem(item) {
+      var index = this.members.indexOf(item);
+      var me = this;
+
+      if (confirm("Are you sure you want to delete this item?")) {
+        var memberId = this.members[index].id;
+        this.$http
+          .delete(
+            "/api/member/" +
+              memberId +
+              "?token=" +
+              sessionStorage.getItem("token"),
+          )
+          .then(function(response) {
+            me.members.splice(index, 1);
+
+            me.showAlert("success", "Gelöscht");
+          })
+          .catch(function(error) {
             me.handleRequestError(error);
           });
-        this.editWindow.shown = true;
-      },
-      viewItem (item) {
-        this.showItem(item);
-        this.editWindow.readonly = true;
-      },
-      editItem (item) {
-        this.showItem(item);
-        this.editWindow.readonly = this.strictReadonly || false;
-      },
-      deleteItem (item) {
-        var index = this.members.indexOf(item);
-        var me = this;
+      }
+    },
+    closeEditWindow() {
+      this.editWindow.saveInProgress = false;
+      this.editWindow.shown = false;
+      this.editWindow.readonly = false;
+      setTimeout(() => {
+        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editWindow.errors = {};
+        this.editedIndex = -1;
+      }, 300);
+    },
+    closeEditProjectTeamMemberWindow() {
+      this.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = false;
+      this.editWindow.teamList.editProjectTeamMemberWindow.shown = false;
+      this.editWindow.teamList.editProjectTeamMemberWindow.readonly = false;
+      setTimeout(() => {
+        this.editedProjectTeamMember = Object.assign(
+          {},
+          this.editWindow.teamList.defaultProjectTeamMember,
+        );
+        this.editWindow.teamList.editProjectTeamMemberWindow.errors = {};
+        this.editedProjectTeamMemberIndex = -1;
+      }, 300);
+    },
+    saveEditWindow() {
+      this.editWindow.saveInProgress = true;
+      var me = this;
 
-        if (confirm('Are you sure you want to delete this item?')) {
-          var memberId = this.members[index].id;
-          this.$http.delete(
-            '/api/member/' + memberId + '?token=' + sessionStorage.getItem('token')
+      if (this.editedIndex > -1) {
+        var memberId = this.editedItem.id;
+        this.$http
+          .put(
+            "/api/member/" +
+              memberId +
+              "?token=" +
+              sessionStorage.getItem("token"),
+            this.editedItem,
           )
-            .then(function (response) {
-              me.members.splice(index, 1);
+          .then(function(response) {
+            Object.assign(me.members[me.editedIndex], response.data);
+            me.closeEditWindow();
 
-              me.showAlert(
-                "success",
-                "Gelöscht"
-              );
-            })
-            .catch(function (error) {
-              me.handleRequestError(error);
-            });
-        }
-      },
-      closeEditWindow () {
-        this.editWindow.saveInProgress = false;
-        this.editWindow.shown = false;
-        this.editWindow.readonly = false;
-        setTimeout(() => {
-          this.editedItem = Object.assign({}, this.defaultItem);
-          this.editWindow.errors = {};
-          this.editedIndex = -1
-        }, 300);
-      },
-      closeEditProjectTeamMemberWindow () {
-        this.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = false;
-        this.editWindow.teamList.editProjectTeamMemberWindow.shown = false;
-        this.editWindow.teamList.editProjectTeamMemberWindow.readonly = false;
-        setTimeout(() => {
-          this.editedProjectTeamMember = Object.assign({}, this.editWindow.teamList.defaultProjectTeamMember);
-          this.editWindow.teamList.editProjectTeamMemberWindow.errors = {};
-          this.editedProjectTeamMemberIndex = -1
-        }, 300);
-      },
-      saveEditWindow () {
-        this.editWindow.saveInProgress = true;
-        var me = this;
-
-        if (this.editedIndex > -1) {
-          var memberId = this.editedItem.id;
-          this.$http.put(
-            '/api/member/' + memberId + '?token=' + sessionStorage.getItem('token'),
-            this.editedItem
+            me.showAlert("success", "Gespeichert");
+          })
+          .catch(function(error) {
+            me.handleRequestError(error, me.editWindow);
+          });
+      } else {
+        this.$http
+          .post(
+            "/api/member?token=" + sessionStorage.getItem("token"),
+            this.editedItem,
           )
-            .then(function (response) {
-              Object.assign(me.members[me.editedIndex], response.data);
-              me.closeEditWindow();
+          .then(function(response) {
+            me.members.push(response.data);
+            me.closeEditWindow();
 
-              me.showAlert(
-                "success",
-                "Gespeichert"
-              );
-            })
-            .catch(function (error) {
-              me.handleRequestError(error, me.editWindow);
-            });
-        } else {
-          this.$http.post(
-            '/api/member?token=' + sessionStorage.getItem('token'),
-            this.editedItem
+            me.showAlert("success", "Gespeichert");
+          })
+          .catch(function(error) {
+            me.handleRequestError(error, me.editWindow);
+          });
+      }
+    },
+    saveEditProjectTeamMemberWindow: function() {
+      this.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = true;
+      var me = this;
+
+      if (this.editWindow.teamList.editedProjectTeamMemberIndex > -1) {
+        var projectTeamMemberId = this.editWindow.teamList
+          .editedProjectTeamMember.project_team_member.id;
+        this.$http
+          .put(
+            "/api/project-team-member/" +
+              projectTeamMemberId +
+              "?token=" +
+              sessionStorage.getItem("token"),
+            this.editWindow.teamList.editedProjectTeamMember
+              .project_team_member,
           )
-            .then(function(response) {
-              me.members.push(response.data);
-              me.closeEditWindow();
-
-              me.showAlert(
-                "success",
-                "Gespeichert"
-              );
-            })
-            .catch(function (error) {
-              me.handleRequestError(error, me.editWindow);
-            });
-        }
-      },
-      saveEditProjectTeamMemberWindow: function() {
-        this.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = true;
-        var me = this;
-
-        if(this.editWindow.teamList.editedProjectTeamMemberIndex > -1) {
-          var projectTeamMemberId = this.editWindow.teamList.editedProjectTeamMember.project_team_member.id;
-          this.$http.put(
-            '/api/project-team-member/' + projectTeamMemberId + '?token=' + sessionStorage.getItem('token'),
-            this.editWindow.teamList.editedProjectTeamMember.project_team_member
+          .then(function(response) {
+            Object.assign(
+              me.projectTeams[
+                me.editWindow.teamList.editedProjectTeamMemberIndex
+              ].project_team_member,
+              response.data,
+            );
+            me.closeEditProjectTeamMemberWindow();
+          })
+          .catch(function(error) {
+            me.handleRequestError(
+              error,
+              me.editWindow.teamList.editProjectTeamMemberWindow,
+            );
+          });
+      } else {
+        this.editWindow.teamList.editedProjectTeamMember.project_team_member.member_id = this.editedItem.id;
+        this.$http
+          .post(
+            "/api/project-team-member?token=" + sessionStorage.getItem("token"),
+            this.editWindow.teamList.editedProjectTeamMember
+              .project_team_member,
           )
-            .then(function (response) {
-              Object.assign(me.projectTeams[me.editWindow.teamList.editedProjectTeamMemberIndex].project_team_member, response.data);
-              me.closeEditProjectTeamMemberWindow();
-            })
-            .catch(function (error) {
-              me.handleRequestError(error, me.editWindow.teamList.editProjectTeamMemberWindow);
-            });
-        } else {
-          this.editWindow.teamList.editedProjectTeamMember.project_team_member.member_id = this.editedItem.id;
-          this.$http.post(
-            '/api/project-team-member?token=' + sessionStorage.getItem('token'),
-            this.editWindow.teamList.editedProjectTeamMember.project_team_member
+          .then(function(response) {
+            var projectTeamNewId = response.data.project_team_id;
+            var projectTeamNew = me.allProjectTeams.find(
+              (projectTeam) => projectTeam.id === projectTeamNewId,
+            );
+            projectTeamNew.project_team_member = response.data;
+
+            me.projectTeams.push(projectTeamNew);
+            me.closeEditProjectTeamMemberWindow();
+          })
+          .catch(function(error) {
+            me.handleRequestError(
+              error,
+              me.editWindow.teamList.editProjectTeamMemberWindow,
+            );
+          });
+      }
+    },
+    showProjectTeamMemberItem: function(item) {
+      this.editWindow.teamList.editedProjectTeamMemberIndex = this.projectTeams.indexOf(
+        item,
+      );
+      this.editWindow.teamList.editProjectTeamMemberWindow.loading = true;
+
+      this.editWindow.teamList.editedProjectTeamMember = Object.assign(
+        this.projectTeams[
+          this.editWindow.teamList.editedProjectTeamMemberIndex
+        ],
+        item,
+      );
+
+      this.editWindow.teamList.editProjectTeamMemberWindow.shown = true;
+    },
+    viewProjectTeamMemberItem: function(item) {
+      this.showProjectTeamMemberItem(item);
+      this.editWindow.teamList.editProjectTeamMemberWindow.readonly = true;
+    },
+    editProjectTeamMemberItem: function(item) {
+      this.showProjectTeamMemberItem(item);
+      this.editWindow.teamList.editProjectTeamMemberWindow.readonly =
+        this.strictReadonly || false;
+    },
+    deleteProjectTeamMemberItem: function(item) {
+      var index = this.editedItem.project_teams.indexOf(item);
+      var me = this;
+
+      if (confirm("Are you sure you want to delete this item?")) {
+        var projectTeamMember = this.editedItem.project_teams[index]
+          .project_team_member.id;
+        this.$http
+          .delete(
+            "/api/project-team-member/" +
+              projectTeamMember +
+              "?token=" +
+              sessionStorage.getItem("token"),
           )
-            .then(function(response) {
-              var projectTeamNewId = response.data.project_team_id;
-              var projectTeamNew = me.allProjectTeams.find(projectTeam => (projectTeam.id === projectTeamNewId));
-              projectTeamNew.project_team_member = response.data;
+          .then(function(response) {
+            var tmpEditedItem = me.editedItem;
+            tmpEditedItem.project_teams.splice(index, 1);
 
-              me.projectTeams.push(projectTeamNew);
-              me.closeEditProjectTeamMemberWindow();
-            })
-            .catch(function (error) {
-              me.handleRequestError(error, me.editWindow.teamList.editProjectTeamMemberWindow);
-            });
-        }
-      },
-      showProjectTeamMemberItem: function(item) {
-        this.editWindow.teamList.editedProjectTeamMemberIndex = this.projectTeams.indexOf(item);
-        this.editWindow.teamList.editProjectTeamMemberWindow.loading = true;
+            me.editedItem = Object.assign({}, tmpEditedItem);
 
-        this.editWindow.teamList.editedProjectTeamMember = Object.assign(this.projectTeams[this.editWindow.teamList.editedProjectTeamMemberIndex], item);
-
-        this.editWindow.teamList.editProjectTeamMemberWindow.shown = true;
-      },
-      viewProjectTeamMemberItem: function(item) {
-        this.showProjectTeamMemberItem(item);
-        this.editWindow.teamList.editProjectTeamMemberWindow.readonly = true;
-      },
-      editProjectTeamMemberItem: function(item) {
-        this.showProjectTeamMemberItem(item);
-        this.editWindow.teamList.editProjectTeamMemberWindow.readonly = this.strictReadonly || false;
-      },
-      deleteProjectTeamMemberItem: function(item) {
-        var index = this.editedItem.project_teams.indexOf(item);
-        var me = this;
-
-        if (confirm('Are you sure you want to delete this item?')) {
-          var projectTeamMember = this.editedItem.project_teams[index].project_team_member.id;
-          this.$http.delete(
-            '/api/project-team-member/' + projectTeamMember + '?token=' + sessionStorage.getItem('token')
-          )
-            .then(function (response) {
-              var tmpEditedItem = me.editedItem;
-              tmpEditedItem.project_teams.splice(index, 1);
-
-              me.editedItem = Object.assign({}, tmpEditedItem);
-
-              me.showAlert(
-                "success",
-                "Gelöscht"
-              );
-            })
-            .catch(function (error) {
-              me.handleRequestError(error);
-            });
-        }
-      },
-    }
-  }
+            me.showAlert("success", "Gelöscht");
+          })
+          .catch(function(error) {
+            me.handleRequestError(error);
+          });
+      }
+    },
+  },
+};
 </script>
