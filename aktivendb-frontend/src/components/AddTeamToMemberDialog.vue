@@ -120,7 +120,7 @@
 
 <script>
 export default {
-  name: "AddTeamToMember",
+  name: "AddTeamToMemberDialog",
   props: [
     "editWindow",
     "editedItem",
