@@ -32,6 +32,7 @@
           :searchEditWindow="searchEditWindow"
           :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow"
+          :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow"
           @saveEW="saveEditWindow"
         ></AddMemberToMembersDialog>
@@ -82,7 +83,6 @@ export default {
   name: "Member",
   data() {
     return {
-      xxx: "yyy",
       search: "",
       strictReadonly: false,
       searchEditWindow: "",
@@ -272,6 +272,7 @@ export default {
   },
   methods: {
     handleRequestError(error, scope) {
+      console.log("hre!!!");
       this.is_logged_in = false;
       if (error.response) {
         console.log(error.response);

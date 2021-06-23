@@ -32,6 +32,7 @@
           :searchEditWindow="searchEditWindow"
           :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow"
+          :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow"
           @saveEW="saveEditWindow"
         ></AddTeamToTeamsDialog>

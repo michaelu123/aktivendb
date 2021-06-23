@@ -8,7 +8,7 @@
         v-on="on"
         v-if="!strictReadonly"
       >
-        <v-icon left>add</v-icon> Hinzufügen
+        <v-icon left>add</v-icon> AG Hinzufügen
       </v-btn>
     </template>
     <v-card>
@@ -149,6 +149,8 @@ export default {
     "searchEditWindow",
     "checkForTrue",
     "closeEditProjectTeamMemberWindow",
+    "handleRequestError",
+
   ],
   methods: {
     closeEW() {

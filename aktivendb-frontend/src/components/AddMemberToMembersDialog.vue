@@ -8,14 +8,24 @@
         v-on="on"
         v-if="!strictReadonly"
       >
-        <v-icon left>add</v-icon> Hinzufügen
+        <v-icon left>add</v-icon> Mitglied Hinzufügen
       </v-btn>
     </template>
     <v-card>
       <v-card-title>
-        <span class="headline">Mitglied</span>
+        <div>
+          <span class="headline">Mitglied</span>
+          <v-alert
+            :type="alert.type"
+            outlined
+            v-model="alert.shown"
+            dismissible
+            width="100%"
+          >
+            {{ alert.text }}
+          </v-alert>
+        </div>
       </v-card-title>
-
       <v-card-text v-if="editWindow.loading">
         Wird geladen...
         <v-progress-circular
@@ -26,6 +36,29 @@
 
       <v-card-text v-if="!editWindow.loading">
         <v-container>
+          <v-row class="align-baseline">
+            <v-btn
+              height="60"
+              type="submit"
+              outlined
+              color="red"
+              @click.prevent="signUp"
+            >
+              Als AktivenDB-Benutzer einrichten
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-text-field
+              :append-icon="showPwd ? 'mdi-eye' : 'mdi-eye-off'"
+              :type="showPwd ? 'text' : 'password'"
+              @click:append="showPwd = !showPwd"
+              height="60"
+              outlined
+              label="Mit initialem Passwort..."
+              v-model="dbpasswd"
+              color="red"
+            ></v-text-field>
+            <v-spacer></v-spacer>
+          </v-row>
           <v-form ref="form" v-model="editWindow.formValid" lazy-validation>
             <v-text-field
               v-model="editedItem.name"
@@ -230,6 +263,17 @@ import AddTeamToMemberDialog from "./AddTeamToMemberDialog.vue";
 
 export default {
   components: { AddTeamToMemberDialog },
+  data() {
+    return {
+      alert: {
+        shown: false,
+        text: "",
+        type: "success",
+      },
+      dbpasswd: "",
+      showPwd: false,
+    };
+  },
   name: "AddMemberToMembersDialog",
   props: [
     "editWindow",
@@ -241,6 +285,7 @@ export default {
     "searchEditWindow",
     "checkForTrue",
     "closeEditProjectTeamMemberWindow",
+    "handleRequestError",
   ],
   computed: {
     today() {
@@ -283,9 +328,9 @@ export default {
       var me = this;
 
       if (confirm("Are you sure you want to delete this item?")) {
-        var projectTeamMember = this.editedItem.project_teams[index]
-          .project_team_member.id;
-        this.$http
+        var projectTeamMember =
+          me.editedItem.project_teams[index].project_team_member.id;
+        me.$http
           .delete(
             "/api/project-team-member/" +
               projectTeamMember +
@@ -306,20 +351,19 @@ export default {
       }
     },
     saveEditProjectTeamMemberWindow: function() {
-      this.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = true;
       var me = this;
+      me.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = true;
 
-      if (this.editWindow.teamList.editedProjectTeamMemberIndex > -1) {
-        var projectTeamMemberId = this.editWindow.teamList
-          .editedProjectTeamMember.project_team_member.id;
-        this.$http
+      if (me.editWindow.teamList.editedProjectTeamMemberIndex > -1) {
+        var projectTeamMemberId =
+          me.editWindow.teamList.editedProjectTeamMember.project_team_member.id;
+        me.$http
           .put(
             "/api/project-team-member/" +
               projectTeamMemberId +
               "?token=" +
               sessionStorage.getItem("token"),
-            this.editWindow.teamList.editedProjectTeamMember
-              .project_team_member,
+            me.editWindow.teamList.editedProjectTeamMember.project_team_member,
           )
           .then(function(response) {
             Object.assign(
@@ -337,12 +381,12 @@ export default {
             );
           });
       } else {
-        this.editWindow.teamList.editedProjectTeamMember.project_team_member.member_id = this.editedItem.id;
-        this.$http
+        me.editWindow.teamList.editedProjectTeamMember.project_team_member.member_id =
+          me.editedItem.id;
+        me.$http
           .post(
             "/api/project-team-member?token=" + sessionStorage.getItem("token"),
-            this.editWindow.teamList.editedProjectTeamMember
-              .project_team_member,
+            me.editWindow.teamList.editedProjectTeamMember.project_team_member,
           )
           .then(function(response) {
             var projectTeamNewId = response.data.project_team_id;
@@ -361,6 +405,65 @@ export default {
             );
           });
       }
+    },
+    showAlert(type, text) {
+      this.alert.shown = true;
+      this.alert.type = type;
+      this.alert.text = text;
+
+      setTimeout(() => {
+        this.alert.shown = false;
+      }, 5000);
+    },
+    closeEditWindow() {
+      this.editWindow.saveInProgress = false;
+      this.editWindow.shown = false;
+      this.editWindow.readonly = false;
+      setTimeout(() => {
+        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editWindow.errors = {};
+        this.editedIndex = -1;
+      }, 300);
+    },
+    signUp() {
+      var me = this;
+      console.log(
+        me.editedItem.name,
+        me.editedItem.email_adfc,
+        me.editedItem.email_private,
+        me.editedItem.adfc_id,
+      );
+
+      if (me.dbpasswd == "") {
+        me.showAlert("error", "Bitte Passwort angeben");
+        return;
+      }
+      var email = me.editedItem.email_adfc;
+      if (email == null || email == "") {
+        email = me.editedItem.email_private;
+      }
+      if (email == null || email == "") {
+        me.showAlert("error", "Keine email-Adresse verfügbar");
+        return;
+      }
+
+      var newUser = {
+        member_id: me.editedItem.adfc_id,
+        email: email,
+        password: me.dbpasswd,
+      };
+
+      me.$http
+        .post("/api/user?token=" + sessionStorage.getItem("token"), newUser)
+        .then(function(response) {
+          me.closeEditWindow();
+          me.showAlert("success", "Neuer Benutzer wurde gespeichert");
+          this.dbpasswd = "";
+        })
+        .catch(function(error) {
+          me.closeEditWindow();
+          me.handleRequestError(error, me.editWindow);
+        });
     },
   },
 };

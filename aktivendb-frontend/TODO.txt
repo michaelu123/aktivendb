@@ -1,0 +1,51 @@
+Passwort ändern geht mit: [POST] http://aktivendb.adfc-muenchen.de/auth/change_password?token={{Token}}
+
+{
+    "password_old": "abc321",
+    "password_new": "abc123",
+    "password_conf": "abc123"
+}
+password_old ist das alte Passwort und password_new bzw. password_conf das neue Passwort. Die Idee ist, dass man zweimal das neue Passwort eingibt, damit man sich nicht vertippt.
+
+Neue User (mit denen man sich einloggen kann) kann man anlegen mit: 
+    [POST⦘ http://aktivendb.adfc-muenchen.de/api/user?token={{Token}}
+
+{
+    "member_id": 8,
+    "email": "someemail@example.com",
+    "password": "einPasswort"
+}
+member_id ist ein Mitglied, der zum User gehört. 
+email und password sind die Login-Daten (E-Mail kann gleich sein 
+wie die im member Datensatz, muss aber nicht).
+
+Ansonsten hab ich an den Berechtigungen geschraubt:
+* Nur Administratoren dürfen AGs anlegen
+* Jeder darf alle AGs sehen
+* Nur Vorsitzende dürfen Details zur AG sehen, also v.a. wer in der AG ist.
+* Vorsitzende dürfen sehen, wer in der eigenen AG ist
+* Vorsitzende dürfen Aktive zur "eigenen" AG hinzufügen
+* Vorsitzende dürfen von ihren "eigenen" Aktiven Details sehen und bearbeiten
+* Jeder darf neue Aktive anlegen (z.B. AG-Leitung erstellt neuen 
+    Aktiven und fügt sie dann der AG hinzu)
+* Jeder darf Namen aller Aktiven sehen (um sie auch 
+    der eignen AG hinzuzufügen)
+* Ob der eingeloggte Nutzer Details sehen darf (und damit 
+    bearbeiten darf) wird mit dem Flag "with_details" angegeben. 
+    Falls true, dann dürfen Details gesehen und bearbeitet werden, 
+    falls nicht, dann nicht (Die Logik ist auch im Backend, das 
+    Flag ist nur als Hinweis gedacht). Gilt für Aktive und AGs.
+
+
+
+Test: POST
+https://aktivendb.adfc-muenchen.de/api/user?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsdW1lbi1qd3QiLCJzdWIiOiI2IyMjIiwiaWF0IjoxNjIzNzM5NjQ1LCJleHAiOjE2MjM3NTA0NDV9.QbAqmrsU3uSVZksGAuZNjkyTWjmD209NZaxpGY7Ehog
+{
+    "member_id": 1000,
+    "email": "g.abels@gmx.net",
+    "password": "xxx123"
+}
+
+
+Problem mit id 21, 20,22,23 sind OK
+https://aktivendb.adfc-muenchen.de/api/member/21?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsdW1lbi1qd3QiLCJzdWIiOiI2IyMjIiwiaWF0IjoxNjI0NDM5OTkzLCJleHAiOjE2MjQ0NTA3OTN9.yyuZPouJny0whtO_bixhZ4t7Bgh8VQPohfRvikUDVVk
