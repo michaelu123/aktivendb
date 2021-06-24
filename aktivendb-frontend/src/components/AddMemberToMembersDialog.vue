@@ -36,8 +36,8 @@
 
       <v-card-text v-if="!editWindow.loading">
         <v-container>
-          <v-row class="align-baseline">
-            <v-btn
+          <v-row v-if="isAdmin()" class="align-baseline">
+            <v-btn class="mr-5"
               height="60"
               type="submit"
               outlined
@@ -46,7 +46,6 @@
             >
               Als AktivenDB-Benutzer einrichten
             </v-btn>
-            <v-spacer></v-spacer>
             <v-text-field
               :append-icon="showPwd ? 'mdi-eye' : 'mdi-eye-off'"
               :type="showPwd ? 'text' : 'password'"
@@ -57,7 +56,6 @@
               v-model="dbpasswd"
               color="red"
             ></v-text-field>
-            <v-spacer></v-spacer>
           </v-row>
           <v-form ref="form" v-model="editWindow.formValid" lazy-validation>
             <v-text-field
@@ -465,6 +463,12 @@ export default {
           me.handleRequestError(error, me.editWindow);
         });
     },
+    isAdmin() { 
+      var me = this;
+      console.log("me", me);
+      var email = sessionStorage.getItem("email");
+      return email != null && email == "admin@aktivendb.adfc-muenchen.de";
+    }
   },
 };
 </script>

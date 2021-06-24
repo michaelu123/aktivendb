@@ -64,7 +64,7 @@
             required
           ></v-text-field>
 
-          <v-btn
+          <v-btn class="my-5"
             type="submit"
             block
             outlined
@@ -75,7 +75,7 @@
             Login
           </v-btn>
 
-          <v-btn
+          <v-btn class="my-5"
             @click.prevent="chgPasswd = !chgPasswd"
             type="submit"
             block
@@ -87,7 +87,7 @@
             {{ chgPasswd ? "Passwort nicht ändern" : "Passwort ändern" }}
           </v-btn>
 
-          <v-btn
+          <v-btn class="my-5"
             v-if="chgPasswd"
             @click.prevent="changePasswd"
             type="submit"
@@ -143,6 +143,7 @@ export default {
       this.error = "";
       var me = this;
       this.loading = true;
+      sessionStorage.setItem("email", "");
       try {
         var response = await me.$http.post("/auth/login", {
           email: this.email,
@@ -151,6 +152,7 @@ export default {
         var data = response.data;
         sessionStorage.setItem("token", data.token);
         sessionStorage.setItem("readonly", data.user.readonly);
+        sessionStorage.setItem("email", this.email);
         me.$store.commit("logged_in", data.user);
         if (pushIfSucc) {
           me.$router.push("/");
