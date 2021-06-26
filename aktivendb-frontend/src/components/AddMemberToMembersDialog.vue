@@ -37,7 +37,8 @@
       <v-card-text v-if="!editWindow.loading">
         <v-container>
           <v-row v-if="isAdmin()" class="align-baseline">
-            <v-btn class="mr-5"
+            <v-btn
+              class="mr-5"
               height="60"
               type="submit"
               outlined
@@ -418,20 +419,13 @@ export default {
       this.editWindow.shown = false;
       this.editWindow.readonly = false;
       setTimeout(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
+        // MUH this.editedItem = Object.assign({}, this.defaultItem);
         this.editWindow.errors = {};
         this.editedIndex = -1;
       }, 300);
     },
-    signUp() {
+    async signUp() {
       var me = this;
-      console.log(
-        me.editedItem.name,
-        me.editedItem.email_adfc,
-        me.editedItem.email_private,
-        me.editedItem.adfc_id,
-      );
-
       if (me.dbpasswd == "") {
         me.showAlert("error", "Bitte Passwort angeben");
         return;
@@ -446,29 +440,40 @@ export default {
       }
 
       var newUser = {
-        member_id: me.editedItem.adfc_id,
+        member_id: me.editedItem.id,
         email: email,
         password: me.dbpasswd,
       };
 
-      me.$http
-        .post("/api/user?token=" + sessionStorage.getItem("token"), newUser)
-        .then(function(response) {
-          me.closeEditWindow();
-          me.showAlert("success", "Neuer Benutzer wurde gespeichert");
-          this.dbpasswd = "";
-        })
-        .catch(function(error) {
+      try {
+        var response = await me.$http.post(
+          "/api/user?token=" + sessionStorage.getItem("token"),
+          newUser,
+        );
+        me.closeEditWindow();
+        me.showAlert("success", "Neuer Benutzer wurde gespeichert");
+        this.dbpasswd = "";
+      } catch (error) {
+        try {
+          response = await me.$http.put(
+            "/api/user/" +
+              me.editedItem.user.id +
+              "?token=" +
+              sessionStorage.getItem("token"),
+            newUser,
+          );
+          me.showAlert("success", "Benutzer-Passwort wurde geändert");
+        } catch (error) {
           me.closeEditWindow();
           me.handleRequestError(error, me.editWindow);
-        });
+        }
+      }
     },
-    isAdmin() { 
+    isAdmin() {
       var me = this;
-      console.log("me", me);
       var email = sessionStorage.getItem("email");
       return email != null && email == "admin@aktivendb.adfc-muenchen.de";
-    }
+    },
   },
 };
 </script>

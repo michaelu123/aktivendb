@@ -46,6 +46,16 @@ https://aktivendb.adfc-muenchen.de/api/user?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
     "password": "xxx123"
 }
 
+/storage/logs/lumen.log
 
-Problem mit id 21, 20,22,23 sind OK
-https://aktivendb.adfc-muenchen.de/api/member/21?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsdW1lbi1qd3QiLCJzdWIiOiI2IyMjIiwiaWF0IjoxNjI0NDM5OTkzLCJleHAiOjE2MjQ0NTA3OTN9.yyuZPouJny0whtO_bixhZ4t7Bgh8VQPohfRvikUDVVk
+
+Fragen:
+
+id bei put = users.id, beimn login als "users" zu bekommen
+
+npm wie starten: lokal aufrufen, dann public/app kopieren
+isAdmin() 
+
+Buttons wie Hinzufügen oder Ändern nur anzeigen wenn erlaubt
+
+Zusatzfelder

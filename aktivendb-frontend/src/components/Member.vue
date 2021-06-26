@@ -272,7 +272,6 @@ export default {
   },
   methods: {
     handleRequestError(error, scope) {
-      console.log("hre!!!");
       this.is_logged_in = false;
       if (error.response) {
         console.log(error.response);
