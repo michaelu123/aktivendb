@@ -35,6 +35,49 @@
 
       <v-card-text v-if="!editWindow.loading">
         <v-container>
+          <v-span>Als Excel-Datei exportieren:</v-span>
+          <v-row class="align-baseline" v-if="isAdmin">
+            <v-text-field
+              height="60"
+              type="text"
+              outlined
+              color="primary"
+              label="Bitte Dateinamen eingeben"
+              v-model="excelFileName"
+            ></v-text-field>
+            <v-menu offset_y>
+              <template v-slot:activator="{ on: activationEvents }">
+                <v-btn
+                  outlined
+                  color="primary"
+                  height="60"
+                  text
+                  class="mx-4"
+                  v-on="activationEvents"
+                >
+                  {{ preferredEmail }}
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item key="1" @click="prefer('ADFC')">
+                  <v-list-item-title>ADFC-Email-Adresse</v-list-item-title>
+                </v-list-item>
+                <v-list-item key="2" @click="prefer('Privat')">
+                  <v-list-item-title>Private Email-Adresse</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <v-btn
+              height="60"
+              color="primary"
+              type="submit"
+              outlined
+              @click.prevent="exportExcel"
+            >
+              <v-icon left>mdi-file-excel</v-icon> Jetzt exportieren
+            </v-btn>
+            <v-spacer></v-spacer>
+          </v-row>
           <v-form ref="form" v-model="editWindow.formValid" lazy-validation>
             <v-text-field
               v-model="editedItem.name"
@@ -78,48 +121,6 @@
               :error-messages="editWindow.errors.needs_first_aid_training"
             ></v-switch>
           </v-form>
-
-          <v-row class="my-5 align-baseline" v-if="isAdmin">
-            <v-btn
-              height="60"
-              color="primary"
-              class="mb-2 mx-5"
-              type="submit"
-              outlined
-              @click.prevent="exportExcel"
-            >
-              <v-icon left>mdi-file-excel</v-icon> Als Excel-Datei exportieren
-            </v-btn>
-            <v-menu offset_y>
-              <template v-slot:activator="{ on: activationEvents }">
-                <v-btn
-                  outlined
-                  color="primary"
-                  height="60"
-                  text
-                  class="mr-4"
-                  v-on="activationEvents"
-                >
-                  {{ preferredEmail }}
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item key="1" @click="prefer('ADFC')">
-                  <v-list-item-title>ADFC-Email-Adresse</v-list-item-title>
-                </v-list-item>
-                <v-list-item key="2" @click="prefer('Privat')">
-                  <v-list-item-title>Private Email-Adresse</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-            <v-text-field
-              height="60"
-              type="text"
-              outlined
-              label="Bitte Dateinamen eingeben"
-              v-model="excelFileName"
-            ></v-text-field>
-          </v-row>
 
           <template v-if="editedItem.id > 0">
             <v-data-table
@@ -211,7 +212,7 @@ export default {
         type: "success",
       },
       excelFileName: "",
-      preferredEmail: "Präferierte Email-Adresse",
+      preferredEmail: "Bevorzugte Email-Adresse",
     };
   },
   methods: {
@@ -347,7 +348,7 @@ export default {
       if (!me.excelFileName.endsWith(".xlsx")) {
         me.excelFileName = me.excelFileName + ".xlsx";
       }
-      if (me.preferredEmail == "Präferierte Email-Adresse") {
+      if (me.preferredEmail == "Bevorzugte Email-Adresse") {
         me.showAlert("error", "Bitte Email-Präferenz eingeben");
         return;
       }
@@ -455,7 +456,7 @@ export default {
     },
     prefer(t) {
       console.log("prefer", t);
-      this.preferredEmail = "Präferiert: " + t;
+      this.preferredEmail = "Bevorzugt: " + t;
     },
   },
 };
