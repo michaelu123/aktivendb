@@ -16,12 +16,6 @@
 
 import readXlsxFile from "read-excel-file";
 
-const dateOptions = {
-  day: "2-digit",
-  month: "2-digit",
-  year: "2-digit",
-};
-
 const nullMember = {
   id: null,
   name: "",
@@ -40,16 +34,6 @@ const nullMember = {
   active: 1,
   user: null,
   project_teams: [],
-};
-
-const nullAG = {
-  id: null,
-  name: null,
-  email: "",
-  needs_first_aid_training: false,
-  description: "",
-  comments: "",
-  members: [],
 };
 
 const nullAGMember = {
@@ -71,11 +55,12 @@ const colNamesMap = {
   Tourenrad: "+AG Tagestouren Tourenrad",
   Rennrad: "+AG Tagestouren Rennrad",
   Mountainbike: "+AG Tagestouren Mountainbike",
+  Mehrtagestouren: "+AG Mehrtagestouren",
 };
 
 export default {
   data() {
-    return { excelFile: [], members: [], allAGs: [], adfcId: 2000 };
+    return { excelFile: [], members: [], allAGs: [], adfcId: -9999 }; // TODO XXX = select max(adfc_id) from members;
   },
   computed: {
     excelFileSet() {
@@ -97,7 +82,6 @@ export default {
       readXlsxFile(this.excelFile).then(async (rows) => {
         console.log("len", rows.length);
         colNames = rows[0];
-        await this.storeAGs(rows);
         await this.storeMembers(rows);
       });
     },
@@ -136,73 +120,74 @@ export default {
       });
     },
 
-    async storeAGs(rows) {
-      let agNames = [];
-      for (let i = 0; i < colNames.length; i++) {
-        let colName = colNames[i];
-        let dbColName = colNamesMap[colName];
-        if (dbColName == null) continue;
-        if (dbColName[0] != "+") continue;
-        agNames.push(dbColName.substring(1));
-      }
-      for (const agName of agNames) {
-        let x = this.allAGs.findIndex((ag) => ag.name === agName);
-        if (x >= 0) continue;
-        // a new AG
-        let ag = { ...nullAG };
-        ag.name = agName;
-        // await this.storeAG(ag);
-        this.allAGs.push(ag);
-      }
+    async getMemberFromApi(id) {
+        let response = await this.$http
+          .get("/api/member/" + id + "?token=" + sessionStorage.getItem("token"));
+        let member = response.data;
+        console.log("getMemberFromApi", member);
+        return member;
     },
 
     async storeMembers(rows) {
-      for (let rowx = 1; rowx < rows.length; rowx++) {
+      for (let rowx = 46; rowx < rows.length; rowx++) {
         const row = rows[rowx];
         const name = row[0];
-        if (!name) continue;
+        if (!name || name == 'Name') continue;
         let x = this.members.findIndex((m) => m.name === name);
-        // if (x >= 0) continue;
         let exi = x >= 0 ? this.members[x] : null;
-        //   for (let colx = 0; colx < colNames.length; colx++) {
-        //     let val = row[colx];
-        //     if (val) {
-        //       if (colx == 25) {
-        //         if (typeof val === "number") {
-        //           val = new Date(Date.UTC(0, 0, val, -23)).toLocaleDateString(
-        //             undefined,
-        //             dateOptions,
-        //           );
-        //         }
-        //       }
-        //       console.log("#", colx, colNames[colx], ":", val);
-        //     }
-        //   }
         let member = this.mapRow(row, exi);
-        //if (!member.email_private) member.email_private = "x@y.de";
-        //if (!member.email_adfc) member.email_adfc = "x@y.de";
-        // await this.storeMember(member);
+        console.log(
+          "Member:",
+          member.name,
+          member.id,
+          member.project_teams,
+          member.interests,
+        );
+        if (!member.email_private || member.email_private == '') member.email_private = "x@y.de";
+        if (!member.email_adfc || member.email_adfc == '') member.email_adfc = "x@y.de";
+        await this.storeMember(member);
+
+        let exiMember = await this.getMemberFromApi(member.id);
+        let exiAGs = exiMember.project_teams;
         for (let agName of member.project_teams) {
+          if (exiAGs.findIndex(p => p.name == agName) >= 0) continue;
           let agMember = { ...nullAGMember };
           agMember.member_id = member.id;
           let ag = this.allAGs.find((ag) => ag.name === agName);
           agMember.project_team_id = ag.id;
-          // await this.storeAGMember(agMember);
+          await this.storeAGMember(agMember);
         }
-        console.log("Member:", member.name, member.id, member.project_teams);
       }
     },
 
     async storeMember(member) {
-      await this.$http
-        .post("/api/member?token=" + sessionStorage.getItem("token"), member)
-        .then(async function(response) {
-          console.log(response);
-          member.id = response.data.id;
-        })
-        .catch(async function(error) {
-          console.log(error);
-        });
+      if (member.id == null) {
+        await this.$http
+          .post("/api/member?token=" + sessionStorage.getItem("token"), member)
+          .then(async function(response) {
+            console.log(response);
+            member.id = response.data.id;
+          })
+          .catch(async function(error) {
+            console.log(error);
+          });
+      } else {
+        await this.$http
+          .put(
+            "/api/member/" +
+              member.id +
+              "?token=" +
+              sessionStorage.getItem("token"),
+            member,
+          )
+          .then(async function(response) {
+            console.log(response);
+            member.id = response.data.id;
+          })
+          .catch(async function(error) {
+            console.log(error);
+          });
+      }
     },
 
     async storeAG(ag) {
@@ -233,6 +218,7 @@ export default {
     },
 
     mapRow(row, exi) {
+      let interests = exi == null || exi.interests == null ? [] : exi.interests.split(",");
       let member = exi == null ? { ...nullMember } : { ...exi };
       if (member.project_teams == null) member.project_teams = [];
       if (member.adfc_id == null) member.adfc_id = this.adfcId++;
@@ -244,6 +230,11 @@ export default {
         if (dbColName == null) continue;
         if (dbColName[0] == "+") {
           let agName = dbColName.substring(1);
+          let x = agName.indexOf(" ", 4);
+          if (x > 0) {
+            interests.push(agName.substring(x + 1));
+            agName = agName.substring(0, x);
+          }
           member.project_teams.push(agName);
           continue;
         }
@@ -251,12 +242,16 @@ export default {
           if (val.toLowerCase().includes("adfc-muenchen.de")) {
             member.email_adfc = val;
           } else {
-          member.email_private = val;
+            member.email_private = val;
           }
           continue;
         }
         // console.log("colName", colName, "dbColName", dbColName, "val", val);
         member[dbColName] = val;
+      }
+      if (interests.length > 0) {
+        interests = interests.sort().filter((x, i, a) => !i || x != a[i - 1]); // sort unique
+        member.interests = interests.join(",");
       }
       console.log("member", member);
       return member;

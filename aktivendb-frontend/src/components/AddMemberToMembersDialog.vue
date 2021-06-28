@@ -470,7 +470,6 @@ export default {
       }
     },
     isAdmin() {
-      var me = this;
       var email = sessionStorage.getItem("email");
       return email != null && email == "admin@aktivendb.adfc-muenchen.de";
     },

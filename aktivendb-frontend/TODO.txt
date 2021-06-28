@@ -51,11 +51,20 @@ https://aktivendb.adfc-muenchen.de/api/user?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
 
 Fragen:
 
-id bei put = users.id, beimn login als "users" zu bekommen
-
-npm wie starten: lokal aufrufen, dann public/app kopieren
+"npm run-script build" lokal aufrufen, dann public/app kopieren
 isAdmin() 
 
 Buttons wie Hinzufügen oder Ändern nur anzeigen wenn erlaubt
 
 Zusatzfelder
+
+
+Fehler: leere email ergibt 422
+
+DELETE FROM project_team_member
+    WHERE ID NOT IN
+    (
+        SELECT MAX(ID) 
+        FROM project_team_member
+        GROUP BY project_team_id,member_id,member_role_id 
+    );

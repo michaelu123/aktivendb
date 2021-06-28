@@ -354,7 +354,7 @@ export default {
         this.$http.delete(
           '/api/project-team/' + projectTeamId + '?token=' + sessionStorage.getItem('token')
         )
-          .then(function (response) {
+          .then(function (_) {
             me.projectTeams.splice(index, 1);
 
             me.showAlert(

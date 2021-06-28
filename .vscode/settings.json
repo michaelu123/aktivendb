@@ -1,0 +1,12 @@
+{
+  "editor.defaultFormatter": "prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "prettier-vscode"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "octref.vetur"
+  },
+  "[xml]": {
+    "editor.defaultFormatter": "mblode.pretty-formatter"
+  }
+}

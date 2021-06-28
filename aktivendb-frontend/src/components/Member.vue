@@ -409,7 +409,7 @@ export default {
               "?token=" +
               sessionStorage.getItem("token"),
           )
-          .then(function(response) {
+          .then(function(_) {
             me.members.splice(index, 1);
 
             me.showAlert("success", "Gelöscht");
