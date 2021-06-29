@@ -35,8 +35,8 @@
 
       <v-card-text v-if="!editWindow.loading">
         <v-container>
-          <v-span>Als Excel-Datei exportieren:</v-span>
-          <v-row class="align-baseline" v-if="isAdmin">
+          <p class="caption">Als Excel-Datei exportieren:</p>
+          <v-row class="align-baseline">
             <v-text-field
               height="60"
               type="text"
@@ -189,6 +189,13 @@
 <script>
 import AddMemberToTeamDialog from "./AddMemberToTeamDialog.vue";
 import writeXlsxFile from "write-excel-file";
+
+function splitName(name) {
+  let x = name.indexOf(",");
+  if (x < 0) return [name, name];
+  return [name.substring(0, x).trim(), name.substring(x + 1).trim()];
+}
+
 export default {
   components: { AddMemberToTeamDialog },
   name: "AddTeamToTeamsDialog",
@@ -418,6 +425,13 @@ export default {
         },
         // Column #6
         {
+          column: "Interessen",
+          type: String,
+          value: (member) => member.interests,
+          width: interestsWidth,
+        },
+        // Column #7
+        {
           column: "Email",
           type: String,
           value: function (member) {
@@ -440,12 +454,23 @@ export default {
               ? emailAdfcWidth
               : emailPrivateWidth,
         },
-        // Column #7
+        // Column #8
         {
-          column: "Interessen",
+          column: "Nachname",
           type: String,
-          value: (member) => member.interests,
-          width: interestsWidth,
+          value: function (member) {
+            return splitName(member.name)[0];
+          },
+          width: nameWidth,
+        },
+        // Column #9
+        {
+          column: "Vorname",
+          type: String,
+          value: function (member) {
+            return splitName(member.name)[1];
+          },
+          width: nameWidth,
         },
       ];
       await writeXlsxFile(me.members, {
