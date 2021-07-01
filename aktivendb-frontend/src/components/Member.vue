@@ -39,6 +39,59 @@
         <v-spacer></v-spacer>
         <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
         <v-spacer></v-spacer>
+
+        <v-container v-if="isAdmin">
+          <p class="caption">Als Excel-Datei exportieren:</p>
+          <v-row class="align-baseline">
+            <v-text-field
+              height="60"
+              type="text"
+              outlined
+              color="primary"
+              label="Bitte Dateinamen eingeben"
+              v-model="excelFileName"
+            ></v-text-field>
+            <v-menu offset_y>
+              <template v-slot:activator="{ on: activationEvents }">
+                <v-btn
+                  outlined
+                  color="primary"
+                  height="60"
+                  text
+                  class="mx-4"
+                  v-on="activationEvents"
+                >
+                  {{ preferredEmail }}
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item key="1" @click="prefer('ADFC')">
+                  <v-list-item-title>ADFC-Email-Adresse</v-list-item-title>
+                </v-list-item>
+                <v-list-item key="2" @click="prefer('Privat')">
+                  <v-list-item-title>Private Email-Adresse</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <v-progress-circular
+              class="mr-4"
+              v-if="loadingTeams"
+              indeterminate
+              color="primary"
+            ></v-progress-circular>
+            <v-btn
+              height="60"
+              color="primary"
+              type="submit"
+              outlined
+              @click.prevent="exportExcel"
+            >
+              <v-icon left>mdi-file-excel</v-icon> Jetzt exportieren
+            </v-btn>
+            <v-spacer></v-spacer>
+          </v-row>
+        </v-container>
+
         <v-text-field
           v-model="search"
           label="Suchen"
@@ -72,12 +125,34 @@
           </v-icon>
         </v-avatar>
       </template>
+      <template v-slot:item.registered_for_first_aid_training="{ item }">
+        <v-avatar
+          color="green"
+          size="24"
+          v-if="checkForTrue(item.registered_for_first_aid_training)"
+        >
+          <v-icon small dense class="white--text">
+            mdi-checkbox-marked-circle-outline
+          </v-icon>
+        </v-avatar>
+        <v-avatar
+          color="red"
+          size="24"
+          v-if="!checkForTrue(item.registered_for_first_aid_training)"
+        >
+          <v-icon small dense class="white--text">
+            mdi-checkbox-blank-circle-outline
+          </v-icon>
+        </v-avatar>
+      </template>
     </v-data-table>
   </v-card>
 </template>
 
 <script>
 import AddMemberToMembersDialog from "./AddMemberToMembersDialog.vue";
+import writeXlsxFile from "write-excel-file";
+
 export default {
   components: { AddMemberToMembersDialog },
   name: "Member",
@@ -172,6 +247,18 @@ export default {
           value: "name",
         },
         {
+          text: "Vorname",
+          value: "first_name",
+        },
+        {
+          text: "Nachname",
+          value: "last_name",
+        },
+        {
+          text: "Geburtsjahr",
+          value: "birthday",
+        },
+        {
           text: "E-Mail (Privat)",
           value: "email_private",
         },
@@ -188,8 +275,16 @@ export default {
           value: "latest_contact",
         },
         {
+          text: "Status",
+          value: "status",
+        },
+        {
           text: "Letzte 1. Hilfe Schulung",
           value: "latest_first_aid_training",
+        },
+        {
+          text: "Registriert für Schulung",
+          value: "registered_for_first_aid_training",
         },
       ],
       editedIndex: -1,
@@ -212,6 +307,7 @@ export default {
         interests: "",
         latest_contact: null,
         active: 1,
+        registered_for_first_aid_training: 0,
         user: null,
         project_teams: [],
       },
@@ -231,28 +327,32 @@ export default {
         interests: "",
         latest_contact: null,
         active: 1,
+        registered_for_first_aid_training: 0,
         user: null,
         project_teams: [],
       },
       memberRoles: [],
+      excelFileName: "",
+      preferredEmail: "Bevorzugte Email-Adresse",
+      loadingTeams: false,
     };
   },
   watch: {
     "editWindow.shown": {
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         val || this.closeEditWindow();
       },
     },
     "editWindow.teamList.editProjectTeamMemberWindow.shown": {
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         val || this.closeEditProjectTeamMemberWindow();
       },
     },
     "editedItem.project_teams": {
       deep: true,
-      handler: function(val) {
+      handler: function (val) {
         if (!val) val = [];
         this.projectTeams = val;
       },
@@ -308,13 +408,13 @@ export default {
 
         this.$http
           .get("/api/members?token=" + sessionStorage.getItem("token"))
-          .then(function(response) {
+          .then(function (response) {
             me.loading = false;
             items = response.data;
 
             resolve({ items });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(error);
             reject("Error");
           });
@@ -327,12 +427,12 @@ export default {
 
         this.$http
           .get("/api/member-roles?token=" + sessionStorage.getItem("token"))
-          .then(function(response) {
+          .then(function (response) {
             items = response.data;
 
             resolve({ items });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(error);
             reject("Error");
           });
@@ -345,12 +445,12 @@ export default {
 
         this.$http
           .get("/api/project-teams?token=" + sessionStorage.getItem("token"))
-          .then(function(response) {
+          .then(function (response) {
             items = response.data;
 
             resolve({ items });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(error);
             reject("Error");
           });
@@ -376,14 +476,14 @@ export default {
           "/api/member/" +
             memberId +
             "?token=" +
-            sessionStorage.getItem("token"),
+            sessionStorage.getItem("token")
         )
-        .then(function(response) {
+        .then(function (response) {
           me.editWindow.loading = false;
           Object.assign(me.members[me.editedIndex], response.data);
           me.editedItem = Object.assign(item, response.data);
         })
-        .catch(function(error) {
+        .catch(function (error) {
           me.handleRequestError(error);
         });
       this.editWindow.shown = true;
@@ -407,14 +507,14 @@ export default {
             "/api/member/" +
               memberId +
               "?token=" +
-              sessionStorage.getItem("token"),
+              sessionStorage.getItem("token")
           )
-          .then(function(_) {
+          .then(function (_) {
             me.members.splice(index, 1);
 
             me.showAlert("success", "Gelöscht");
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(error);
           });
       }
@@ -436,7 +536,7 @@ export default {
       setTimeout(() => {
         this.editedProjectTeamMember = Object.assign(
           {},
-          this.editWindow.teamList.defaultProjectTeamMember,
+          this.editWindow.teamList.defaultProjectTeamMember
         );
         this.editWindow.teamList.editProjectTeamMemberWindow.errors = {};
         this.editedProjectTeamMemberIndex = -1;
@@ -454,35 +554,155 @@ export default {
               memberId +
               "?token=" +
               sessionStorage.getItem("token"),
-            this.editedItem,
+            this.editedItem
           )
-          .then(function(response) {
+          .then(function (response) {
             Object.assign(me.members[me.editedIndex], response.data);
             me.closeEditWindow();
 
             me.showAlert("success", "Gespeichert");
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(error, me.editWindow);
           });
       } else {
         this.$http
           .post(
             "/api/member?token=" + sessionStorage.getItem("token"),
-            this.editedItem,
+            this.editedItem
           )
-          .then(function(response) {
+          .then(function (response) {
             me.members.push(response.data);
             me.closeEditWindow();
 
             me.showAlert("success", "Gespeichert");
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(error, me.editWindow);
           });
       }
     },
+    isAdmin() {
+      var email = sessionStorage.getItem("email");
+      return email != null && email == "admin@aktivendb.adfc-muenchen.de";
+    },
+    async getMemberFromApi(id) {
+      let response = await this.$http.get(
+        "/api/member/" + id + "?token=" + sessionStorage.getItem("token")
+      );
+      let member = response.data;
+      return member;
+    },
+    async exportExcel() {
+      var me = this;
+      if (me.excelFileName == "") {
+        me.showAlert("error", "Bitte Dateinamen eingeben");
+        return;
+      }
+      if (!me.excelFileName.endsWith(".xlsx")) {
+        me.excelFileName = me.excelFileName + ".xlsx";
+      }
+      if (me.preferredEmail == "Bevorzugte Email-Adresse") {
+        me.showAlert("error", "Bitte Email-Präferenz eingeben");
+        return;
+      }
 
+      try {
+        this.loadingTeams = true;
+        for (let m of me.members) {
+          let m2 = await this.getMemberFromApi(m.id);
+          m.ags = m2.project_teams.map((t) => t.name).join(",");
+          console.log("ags", m.name, m.ags);
+        }
+      } finally {
+        this.loadingTeams = false;
+      }
+      const schema = [
+        {
+          column: "Name",
+          type: String,
+          value: (member) => member.name,
+          width: 30,
+        },
+        {
+          column: "Email-ADFC",
+          type: String,
+          value: (member) => member.email_adfc,
+          width: 30,
+        },
+        {
+          column: "Email-Privat",
+          type: String,
+          value: (member) => member.email_private,
+          width: 30,
+        },
+        {
+          column: "Telefon",
+          type: String,
+          value: (member) => member.phone_primary,
+          width: 20,
+        },
+        {
+          column: "Telefon-Alternative",
+          type: String,
+          value: (member) => member.phone_secondary,
+          width: 20,
+        },
+        {
+          column: "AGs",
+          type: String,
+          value: (member) => member.ags,
+          width: 30,
+        },
+        {
+          column: "Interessen",
+          type: String,
+          value: (member) => member.interests,
+          width: 30,
+        },
+        {
+          column: "Email",
+          type: String,
+          value: function (member) {
+            let email = "";
+            if (me.preferredEmail.endsWith("ADFC")) {
+              email =
+                member.email_adfc != ""
+                  ? member.email_adfc
+                  : member.email_private;
+            } else {
+              email =
+                member.email_private != ""
+                  ? member.email_private
+                  : member.email_adfc;
+            }
+            return email;
+          },
+          width: 30,
+        },
+        {
+          column: "Vorname",
+          type: String,
+          value: (member) => member.last_name,
+          width: 30,
+        },
+        {
+          column: "Nachname",
+          type: String,
+          value: (member) => member.first_name,
+          width: 30,
+        },
+      ];
+      await writeXlsxFile(me.members, {
+        schema,
+        fileName: me.excelFileName,
+      });
+      me.excelFileName = "";
+    },
+    prefer(t) {
+      console.log("prefer", t);
+      this.preferredEmail = "Bevorzugt: " + t;
+    },
   },
 };
 </script>

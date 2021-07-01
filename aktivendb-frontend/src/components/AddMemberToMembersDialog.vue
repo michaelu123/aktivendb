@@ -298,31 +298,30 @@ export default {
     saveEW() {
       this.$emit("saveEW");
     },
-    showProjectTeamMemberItem: function(item) {
-      this.editWindow.teamList.editedProjectTeamMemberIndex = this.projectTeams.indexOf(
-        item,
-      );
+    showProjectTeamMemberItem: function (item) {
+      this.editWindow.teamList.editedProjectTeamMemberIndex =
+        this.projectTeams.indexOf(item);
       this.editWindow.teamList.editProjectTeamMemberWindow.loading = true;
 
       this.editWindow.teamList.editedProjectTeamMember = Object.assign(
         this.projectTeams[
           this.editWindow.teamList.editedProjectTeamMemberIndex
         ],
-        item,
+        item
       );
 
       this.editWindow.teamList.editProjectTeamMemberWindow.shown = true;
     },
-    viewProjectTeamMemberItem: function(item) {
+    viewProjectTeamMemberItem: function (item) {
       this.showProjectTeamMemberItem(item);
       this.editWindow.teamList.editProjectTeamMemberWindow.readonly = true;
     },
-    editProjectTeamMemberItem: function(item) {
+    editProjectTeamMemberItem: function (item) {
       this.showProjectTeamMemberItem(item);
       this.editWindow.teamList.editProjectTeamMemberWindow.readonly =
         this.strictReadonly || false;
     },
-    deleteProjectTeamMemberItem: function(item) {
+    deleteProjectTeamMemberItem: function (item) {
       var index = this.editedItem.project_teams.indexOf(item);
       var me = this;
 
@@ -334,9 +333,9 @@ export default {
             "/api/project-team-member/" +
               projectTeamMember +
               "?token=" +
-              sessionStorage.getItem("token"),
+              sessionStorage.getItem("token")
           )
-          .then(function(response) {
+          .then(function (response) {
             var tmpEditedItem = me.editedItem;
             tmpEditedItem.project_teams.splice(index, 1);
 
@@ -344,12 +343,12 @@ export default {
 
             me.showAlert("success", "Gelöscht");
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(error);
           });
       }
     },
-    saveEditProjectTeamMemberWindow: function() {
+    saveEditProjectTeamMemberWindow: function () {
       var me = this;
       me.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = true;
 
@@ -362,21 +361,21 @@ export default {
               projectTeamMemberId +
               "?token=" +
               sessionStorage.getItem("token"),
-            me.editWindow.teamList.editedProjectTeamMember.project_team_member,
+            me.editWindow.teamList.editedProjectTeamMember.project_team_member
           )
-          .then(function(response) {
+          .then(function (response) {
             Object.assign(
               me.projectTeams[
                 me.editWindow.teamList.editedProjectTeamMemberIndex
               ].project_team_member,
-              response.data,
+              response.data
             );
             me.closeEditProjectTeamMemberWindow();
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(
               error,
-              me.editWindow.teamList.editProjectTeamMemberWindow,
+              me.editWindow.teamList.editProjectTeamMemberWindow
             );
           });
       } else {
@@ -385,22 +384,22 @@ export default {
         me.$http
           .post(
             "/api/project-team-member?token=" + sessionStorage.getItem("token"),
-            me.editWindow.teamList.editedProjectTeamMember.project_team_member,
+            me.editWindow.teamList.editedProjectTeamMember.project_team_member
           )
-          .then(function(response) {
+          .then(function (response) {
             var projectTeamNewId = response.data.project_team_id;
             var projectTeamNew = me.allProjectTeams.find(
-              (projectTeam) => projectTeam.id === projectTeamNewId,
+              (projectTeam) => projectTeam.id === projectTeamNewId
             );
             projectTeamNew.project_team_member = response.data;
 
             me.projectTeams.push(projectTeamNew);
             me.closeEditProjectTeamMemberWindow();
           })
-          .catch(function(error) {
+          .catch(function (error) {
             me.handleRequestError(
               error,
-              me.editWindow.teamList.editProjectTeamMemberWindow,
+              me.editWindow.teamList.editProjectTeamMemberWindow
             );
           });
       }
@@ -448,7 +447,7 @@ export default {
       try {
         var response = await me.$http.post(
           "/api/user?token=" + sessionStorage.getItem("token"),
-          newUser,
+          newUser
         );
         me.closeEditWindow();
         me.showAlert("success", "Neuer Benutzer wurde gespeichert");
@@ -460,7 +459,7 @@ export default {
               me.editedItem.user.id +
               "?token=" +
               sessionStorage.getItem("token"),
-            newUser,
+            newUser
           );
           me.showAlert("success", "Benutzer-Passwort wurde geändert");
         } catch (error) {

@@ -190,12 +190,6 @@
 import AddMemberToTeamDialog from "./AddMemberToTeamDialog.vue";
 import writeXlsxFile from "write-excel-file";
 
-function splitName(name) {
-  let x = name.indexOf(",");
-  if (x < 0) return [name, name];
-  return [name.substring(0, x).trim(), name.substring(x + 1).trim()];
-}
-
 export default {
   components: { AddMemberToTeamDialog },
   name: "AddTeamToTeamsDialog",
@@ -458,18 +452,14 @@ export default {
         {
           column: "Nachname",
           type: String,
-          value: function (member) {
-            return splitName(member.name)[0];
-          },
+          value: (member) => member.first_name,
           width: nameWidth,
         },
         // Column #9
         {
           column: "Vorname",
           type: String,
-          value: function (member) {
-            return splitName(member.name)[1];
-          },
+          value: (member) => member.last_name,
           width: nameWidth,
         },
       ];

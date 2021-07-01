@@ -68,3 +68,8 @@ DELETE FROM project_team_member
         FROM project_team_member
         GROUP BY project_team_id,member_id,member_role_id 
     );
+
+
+Neue Felder:
+birthday (varchar 255), status(varchar 4000), registered_for_first_aid_training(tinyint 1), 
+first_name(varchar 255), last_name(varchar 255)
