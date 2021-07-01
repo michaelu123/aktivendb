@@ -60,8 +60,16 @@
           </v-row>
           <v-form ref="form" v-model="editWindow.formValid" lazy-validation>
             <v-text-field
-              v-model="editedItem.name"
-              label="Name"
+              v-model="editedItem.last_name"
+              label="Nachname"
+              required
+              :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.name"
+              :error-messages="editWindow.errors.name"
+            ></v-text-field>
+            <v-text-field
+              v-model="editedItem.first_name"
+              label="Vorname"
               required
               :readonly="editWindow.readonly"
               :error="!!editWindow.errors.name"
@@ -185,14 +193,26 @@
               :error="!!editWindow.errors.interests"
               :error-messages="editWindow.errors.interests"
             ></v-textarea>
-            <v-switch
-              v-model="editedItem.active"
-              label="Aktiv"
-              :disabled="editWindow.readonly"
-              :value-comparator="checkForTrue"
-              :error="!!editWindow.errors.active"
-              :error-messages="editWindow.errors.active"
-            ></v-switch>
+            <v-row>
+              <v-switch
+                class="mr-5"
+                v-model="editedItem.active"
+                label="Aktiv"
+                :disabled="editWindow.readonly"
+                :value-comparator="checkForTrue"
+                :error="!!editWindow.errors.active"
+                :error-messages="editWindow.errors.active"
+              ></v-switch>
+              <v-switch
+                class="ml-5"
+                v-model="editedItem.registered_for_first_aid_training"
+                label="Registriert für Erste-Hilfe-Kurs"
+                :disabled="editWindow.readonly"
+                :value-comparator="checkForTrue"
+                :error="!!editWindow.errors.active"
+                :error-messages="editWindow.errors.active"
+              ></v-switch
+            ></v-row>
           </v-form>
           <template v-if="editedItem.id > 0">
             <v-data-table
@@ -350,24 +370,23 @@ export default {
     },
     saveEditProjectTeamMemberWindow: function () {
       var me = this;
+      var tm = me.editWindow.teamList.editedProjectTeamMember;
+      var tmx = me.editWindow.teamList.editedProjectTeamMemberIndex;
       me.editWindow.teamList.editProjectTeamMemberWindow.saveInProgress = true;
 
-      if (me.editWindow.teamList.editedProjectTeamMemberIndex > -1) {
-        var projectTeamMemberId =
-          me.editWindow.teamList.editedProjectTeamMember.project_team_member.id;
+      if (tmx > -1) {
+        var projectTeamMemberId = tm.project_team_member.id;
         me.$http
           .put(
             "/api/project-team-member/" +
               projectTeamMemberId +
               "?token=" +
               sessionStorage.getItem("token"),
-            me.editWindow.teamList.editedProjectTeamMember.project_team_member
+            tm.project_team_member
           )
           .then(function (response) {
             Object.assign(
-              me.projectTeams[
-                me.editWindow.teamList.editedProjectTeamMemberIndex
-              ].project_team_member,
+              me.projectTeams[tmx].project_team_member,
               response.data
             );
             me.closeEditProjectTeamMemberWindow();
@@ -379,12 +398,11 @@ export default {
             );
           });
       } else {
-        me.editWindow.teamList.editedProjectTeamMember.project_team_member.member_id =
-          me.editedItem.id;
+        tm.project_team_member.member_id = me.editedItem.id;
         me.$http
           .post(
             "/api/project-team-member?token=" + sessionStorage.getItem("token"),
-            me.editWindow.teamList.editedProjectTeamMember.project_team_member
+            tm.project_team_member
           )
           .then(function (response) {
             var projectTeamNewId = response.data.project_team_id;

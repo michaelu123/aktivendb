@@ -242,17 +242,19 @@ export default {
             return this.checkForTrue(value);
           },
         },
+        /*
         {
           text: "Name",
           value: "name",
         },
-        {
-          text: "Vorname",
-          value: "first_name",
-        },
+        */
         {
           text: "Nachname",
           value: "last_name",
+        },
+        {
+          text: "Vorname",
+          value: "first_name",
         },
         {
           text: "Geburtsjahr",
@@ -306,8 +308,8 @@ export default {
         gender: "",
         interests: "",
         latest_contact: null,
-        active: 1,
-        registered_for_first_aid_training: 0,
+        active: true,
+        registered_for_first_aid_training: false,
         user: null,
         project_teams: [],
       },
@@ -326,8 +328,8 @@ export default {
         gender: "",
         interests: "",
         latest_contact: null,
-        active: 1,
-        registered_for_first_aid_training: 0,
+        active: true,
+        registered_for_first_aid_training: false,
         user: null,
         project_teams: [],
       },
@@ -411,7 +413,6 @@ export default {
           .then(function (response) {
             me.loading = false;
             items = response.data;
-
             resolve({ items });
           })
           .catch(function (error) {
@@ -482,6 +483,14 @@ export default {
           me.editWindow.loading = false;
           Object.assign(me.members[me.editedIndex], response.data);
           me.editedItem = Object.assign(item, response.data);
+          try {
+            me.editedItem.active = me.checkForTrue(me.editedItem.active);
+            me.editedItem.registered_for_first_aid_training = me.checkForTrue(
+              me.editedItem.registered_for_first_aid_training
+            );
+          } catch (ex) {
+            console.log("ex", ex);
+          }
         })
         .catch(function (error) {
           me.handleRequestError(error);
@@ -548,6 +557,8 @@ export default {
 
       if (this.editedIndex > -1) {
         var memberId = this.editedItem.id;
+        this.editedItem.name =
+          this.editedItem.last_name + ", " + this.editedItem.first_name;
         this.$http
           .put(
             "/api/member/" +
@@ -618,10 +629,24 @@ export default {
         this.loadingTeams = false;
       }
       const schema = [
-        {
+        /*
+       {
           column: "Name",
           type: String,
           value: (member) => member.name,
+          width: 30,
+        },
+        */
+        {
+          column: "Nachname",
+          type: String,
+          value: (member) => member.first_name,
+          width: 30,
+        },
+        {
+          column: "Vorname",
+          type: String,
+          value: (member) => member.last_name,
           width: 30,
         },
         {
@@ -678,18 +703,6 @@ export default {
             }
             return email;
           },
-          width: 30,
-        },
-        {
-          column: "Vorname",
-          type: String,
-          value: (member) => member.last_name,
-          width: 30,
-        },
-        {
-          column: "Nachname",
-          type: String,
-          value: (member) => member.first_name,
           width: 30,
         },
       ];
