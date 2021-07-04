@@ -372,7 +372,9 @@ export default {
       this.memberRoles = data.items;
     });
     this.getAllProjectTeamsFromApi().then((data) => {
-      this.allProjectTeams = data.items;
+      this.allProjectTeams = data.items.sort((a, b) =>
+        a.name < b.name ? -1 : a.name == b.name ? 0 : 1
+      );
     });
   },
   methods: {

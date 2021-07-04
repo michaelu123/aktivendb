@@ -34,6 +34,8 @@
               item-text="title"
               item-value="id"
               label="Rolle"
+              required
+              :rules="[(v) => checkRule(v) || 'Bitte Rolle angeben']"
               :readonly="
                 editWindow.memberList.editProjectTeamMemberWindow.readonly
               "
@@ -61,6 +63,8 @@
               item-text="name"
               item-value="id"
               label="Person"
+              required
+              :rules="[(v) => checkRule(v) || 'Bitte Person wählen']"
               :readonly="
                 editWindow.memberList.editProjectTeamMemberWindow.readonly
               "
@@ -113,6 +117,12 @@
             editWindow.memberList.editProjectTeamMemberWindow.saveInProgress
           "
           v-if="!editWindow.memberList.editProjectTeamMemberWindow.readonly"
+          :disabled="
+            editWindow.memberList.editedProjectTeamMember.project_team_member
+              .member_role_id == -1 ||
+            editWindow.memberList.editedProjectTeamMember.project_team_member
+              .member_id == -1
+          "
           >Speichern</v-btn
         >
       </v-card-actions>
@@ -141,6 +151,10 @@ export default {
     },
     closeTM() {
       this.$emit("closeTM"); // closeEditProjectTeamMemberWindow
+    },
+    checkRule(v) {
+      console.log("checkRule", v);
+      return v >= 0;
     },
   },
 };

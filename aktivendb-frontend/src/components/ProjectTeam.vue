@@ -70,15 +70,15 @@
 </template>
 
 <script>
-import AddTeamToTeamsDialog from './AddTeamToTeamsDialog.vue';
+import AddTeamToTeamsDialog from "./AddTeamToTeamsDialog.vue";
 export default {
-  components: {AddTeamToTeamsDialog},
+  components: { AddTeamToTeamsDialog },
   name: "ProjectTeam",
-  data () {
+  data() {
     return {
-      search: '',
+      search: "",
       strictReadonly: false,
-      searchEditWindow: '',
+      searchEditWindow: "",
       loading: true,
       editWindow: {
         loading: false,
@@ -92,18 +92,18 @@ export default {
         memberList: {
           headers: [
             {
-              text: 'Actions',
-              value: 'action',
+              text: "Actions",
+              value: "action",
               sortable: false,
               filterable: false,
             },
             {
-              text: 'Aktive(r)',
-              value: 'name',
+              text: "Aktive(r)",
+              value: "name",
             },
             {
-              text: 'Funktion',
-              value: 'project_team_member.member_role_title',
+              text: "Funktion",
+              value: "project_team_member.member_role_title",
             },
           ],
           editProjectTeamMemberWindow: {
@@ -121,9 +121,9 @@ export default {
               member_id: -1,
               member_role_id: -1,
               member_role_title: "",
-              project_team_id: -1
+              project_team_id: -1,
             },
-            name: ""
+            name: "",
           },
           defaultProjectTeamMember: {
             project_team_member: {
@@ -132,37 +132,37 @@ export default {
               member_id: -1,
               member_role_id: -1,
               member_role_title: "",
-              project_team_id: -1
+              project_team_id: -1,
             },
-            name: ""
-          }
-        }
+            name: "",
+          },
+        },
       },
       alert: {
         shown: false,
         text: "",
-        type: "success"
+        type: "success",
       },
       headers: [
         {
-          text: 'Actions',
-          value: 'action',
+          text: "Actions",
+          value: "action",
           sortable: false,
           filterable: false,
         },
         {
-          text: 'Name',
-          value: 'name'
+          text: "Name",
+          value: "name",
         },
         {
-          text: 'E-Mail',
-          value: 'email'
+          text: "E-Mail",
+          value: "email",
         },
         {
-          text: '1. Hilfe',
-          value: 'needs_first_aid_training',
+          text: "1. Hilfe",
+          value: "needs_first_aid_training",
           filterable: false,
-        }
+        },
       ],
       editedIndex: -1,
       projectTeams: [],
@@ -175,7 +175,7 @@ export default {
         needs_first_aid_training: false,
         description: "",
         comments: "",
-        members: []
+        members: [],
       },
       defaultItem: {
         id: -1,
@@ -184,54 +184,53 @@ export default {
         needs_first_aid_training: false,
         description: "",
         comments: "",
-        members: []
+        members: [],
       },
       memberRoles: [],
-    }
+    };
   },
   watch: {
-    'editWindow.shown': {
+    "editWindow.shown": {
       deep: true,
       handler: function (val) {
         val || this.closeEditWindow();
       },
     },
-    'editWindow.memberList.editProjectTeamMemberWindow.shown': {
+    "editWindow.memberList.editProjectTeamMemberWindow.shown": {
       deep: true,
       handler: function (val) {
         val || this.closeEditProjectTeamMemberWindow();
       },
     },
-    'editedItem.members': {
-      deep:true,
-      handler: function(val) {
+    "editedItem.members": {
+      deep: true,
+      handler: function (val) {
         this.members = val;
-      }
+      },
     },
   },
-  mounted () {
-    this.strictReadonly = (sessionStorage.getItem('readonly') == 1);
-    this.getProjectTeamsFromApi()
-      .then(data => {
-        this.projectTeams = data.items;
-      });
-    this.getMemberRolesFromApi()
-      .then(data => {
-        this.memberRoles = data.items;
-      });
-    this.getAllMembersFromApi()
-      .then(data => {
-        this.allMembers = data.items;
-      })
+  mounted() {
+    this.strictReadonly = sessionStorage.getItem("readonly") == 1;
+    this.getProjectTeamsFromApi().then((data) => {
+      this.projectTeams = data.items.sort((a, b) =>
+        a.name < b.name ? -1 : a.name == b.name ? 0 : 1
+      );
+    });
+    this.getMemberRolesFromApi().then((data) => {
+      this.memberRoles = data.items;
+    });
+    this.getAllMembersFromApi().then((data) => {
+      this.allMembers = data.items;
+    });
   },
   methods: {
     handleRequestError(error, scope) {
       this.is_logged_in = false;
-      if(error.response) {
+      if (error.response) {
         console.log(error.response);
         switch (error.response.status) {
           case 401:
-            this.$router.push('login');
+            this.$router.push("login");
             break;
           case 422:
             scope.saveInProgress = false;
@@ -240,17 +239,16 @@ export default {
           default:
             this.showAlert("error", "Unbekannter Fehler");
         }
-      } else if(error.request) {
-        this.$router.push('login');
+      } else if (error.request) {
+        this.$router.push("login");
       } else {
-        this.$router.push('login');
+        this.$router.push("login");
       }
     },
     checkForTrue(val) {
       if (val === true || val == "1" || val == 1) {
         return true;
-      }
-      else {
+      } else {
         return false;
       }
     },
@@ -259,21 +257,21 @@ export default {
       me.loading = true;
 
       return new Promise((resolve, reject) => {
-
         let items = [];
 
-        this.$http.get('/api/project-teams?token=' + sessionStorage.getItem('token'))
+        this.$http
+          .get("/api/project-teams?token=" + sessionStorage.getItem("token"))
           .then(function (response) {
             me.loading = false;
             items = response.data;
 
-            resolve({items});
+            resolve({ items });
           })
           .catch(function (error) {
             me.handleRequestError(error);
             reject("Error");
           });
-      })
+      });
     },
     getMemberRolesFromApi() {
       return new Promise((resolve, reject) => {
@@ -281,17 +279,18 @@ export default {
 
         let items = [];
 
-        this.$http.get('/api/member-roles?token=' + sessionStorage.getItem('token'))
+        this.$http
+          .get("/api/member-roles?token=" + sessionStorage.getItem("token"))
           .then(function (response) {
             items = response.data;
 
-            resolve({items});
+            resolve({ items });
           })
           .catch(function (error) {
             me.handleRequestError(error);
             reject("Error");
           });
-      })
+      });
     },
     getAllMembersFromApi() {
       return new Promise((resolve, reject) => {
@@ -299,17 +298,18 @@ export default {
 
         let items = [];
 
-        this.$http.get('/api/members?token=' + sessionStorage.getItem('token'))
+        this.$http
+          .get("/api/members?token=" + sessionStorage.getItem("token"))
           .then(function (response) {
             items = response.data;
 
-            resolve({items});
+            resolve({ items });
           })
           .catch(function (error) {
             me.handleRequestError(error);
             reject("Error");
           });
-      })
+      });
     },
     showAlert(type, text) {
       this.alert.shown = true;
@@ -320,13 +320,19 @@ export default {
         this.alert.shown = false;
       }, 5000);
     },
-    showItem (item) {
+    showItem(item) {
       this.editedIndex = this.projectTeams.indexOf(item);
       this.editWindow.loading = true;
       var projectTeamId = this.projectTeams[this.editedIndex].id;
       var me = this;
 
-      this.$http.get('/api/project-team/' + projectTeamId + '?token=' + sessionStorage.getItem('token'))
+      this.$http
+        .get(
+          "/api/project-team/" +
+            projectTeamId +
+            "?token=" +
+            sessionStorage.getItem("token")
+        )
         .then(function (response) {
           me.editWindow.loading = false;
           Object.assign(me.projectTeams[me.editedIndex], response.data);
@@ -337,97 +343,100 @@ export default {
         });
       this.editWindow.shown = true;
     },
-    viewItem (item) {
+    viewItem(item) {
       this.showItem(item);
       this.editWindow.readonly = true;
     },
-    editItem (item) {
+    editItem(item) {
       this.showItem(item);
       this.editWindow.readonly = this.strictReadonly || false;
     },
-    deleteItem (item) {
+    deleteItem(item) {
       var index = this.projectTeams.indexOf(item);
       var me = this;
 
-      if (confirm('Are you sure you want to delete this item?')) {
+      if (confirm("Are you sure you want to delete this item?")) {
         var projectTeamId = this.projectTeams[index].id;
-        this.$http.delete(
-          '/api/project-team/' + projectTeamId + '?token=' + sessionStorage.getItem('token')
-        )
+        this.$http
+          .delete(
+            "/api/project-team/" +
+              projectTeamId +
+              "?token=" +
+              sessionStorage.getItem("token")
+          )
           .then(function (_) {
             me.projectTeams.splice(index, 1);
 
-            me.showAlert(
-              "success",
-              "Gelöscht"
-            );
+            me.showAlert("success", "Gelöscht");
           })
           .catch(function (error) {
             me.handleRequestError(error);
           });
       }
     },
-    closeEditWindow () {
+    closeEditWindow() {
       this.editWindow.saveInProgress = false;
       this.editWindow.shown = false;
       this.editWindow.readonly = false;
       setTimeout(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.editWindow.errors = {};
-        this.editedIndex = -1
+        this.editedIndex = -1;
       }, 300);
     },
-    closeEditProjectTeamMemberWindow () {
+    closeEditProjectTeamMemberWindow() {
       this.editWindow.memberList.editProjectTeamMemberWindow.saveInProgress = false;
       this.editWindow.memberList.editProjectTeamMemberWindow.shown = false;
       this.editWindow.memberList.editProjectTeamMemberWindow.readonly = false;
       setTimeout(() => {
-        this.editedProjectTeamMember = Object.assign({}, this.editWindow.memberList.defaultProjectTeamMember);
+        this.editedProjectTeamMember = Object.assign(
+          {},
+          this.editWindow.memberList.defaultProjectTeamMember
+        );
         this.editWindow.memberList.editProjectTeamMemberWindow.errors = {};
-        this.editedProjectTeamMemberIndex = -1
+        this.editedProjectTeamMemberIndex = -1;
       }, 300);
     },
-    saveEditWindow () {
+    saveEditWindow() {
       this.editWindow.saveInProgress = true;
       var me = this;
 
       if (this.editedIndex > -1) {
         var projectTeamId = this.editedItem.id;
-        this.$http.put(
-          '/api/project-team/' + projectTeamId + '?token=' + sessionStorage.getItem('token'),
-          this.editedItem
-        )
+        this.$http
+          .put(
+            "/api/project-team/" +
+              projectTeamId +
+              "?token=" +
+              sessionStorage.getItem("token"),
+            this.editedItem
+          )
           .then(function (response) {
             Object.assign(me.projectTeams[me.editedIndex], response.data);
             me.closeEditWindow();
 
-            me.showAlert(
-              "success",
-              "Gespeichert"
-            );
+            me.showAlert("success", "Gespeichert");
           })
           .catch(function (error) {
             me.handleRequestError(error, me.editWindow);
           });
       } else {
-        this.$http.post(
-          '/api/project-team?token=' + sessionStorage.getItem('token'),
-          this.editedItem
-        )
-          .then(function(response) {
+        this.$http
+          .post(
+            "/api/project-team?token=" + sessionStorage.getItem("token"),
+            this.editedItem
+          )
+          .then(function (response) {
             me.projectTeams.push(response.data);
             me.closeEditWindow();
 
-            me.showAlert(
-              "success",
-              "Gespeichert"
-            );
+            me.showAlert("success", "Gespeichert");
           })
           .catch(function (error) {
             me.handleRequestError(error, me.editWindow);
           });
       }
     },
-  }
-}
+  },
+};
 </script>
