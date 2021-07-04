@@ -364,6 +364,9 @@ export default {
     this.strictReadonly = sessionStorage.getItem("readonly") == 1;
     this.getMembersFromApi().then((data) => {
       this.members = data.items;
+      for (let member of this.members) {
+        member.name = member.last_name + ", " + member.first_name;
+      }
     });
     this.getMemberRolesFromApi().then((data) => {
       this.memberRoles = data.items;
@@ -488,8 +491,10 @@ export default {
             me.editedItem.registered_for_first_aid_training = me.checkForTrue(
               me.editedItem.registered_for_first_aid_training
             );
+            me.editedItem.name =
+              me.editedItem.last_name + ", " + me.editedItem.first_name;
           } catch (ex) {
-            console.log("ex", ex);
+            console.log("showItem ex", ex);
           }
         })
         .catch(function (error) {

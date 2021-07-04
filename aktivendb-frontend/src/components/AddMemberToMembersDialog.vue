@@ -64,16 +64,24 @@
               label="Nachname"
               required
               :readonly="editWindow.readonly"
-              :error="!!editWindow.errors.name"
-              :error-messages="editWindow.errors.name"
+              :error="!!editWindow.errors.last_name"
+              :error-messages="editWindow.errors.last_name"
             ></v-text-field>
             <v-text-field
               v-model="editedItem.first_name"
               label="Vorname"
               required
               :readonly="editWindow.readonly"
-              :error="!!editWindow.errors.name"
-              :error-messages="editWindow.errors.name"
+              :error="!!editWindow.errors.first_name"
+              :error-messages="editWindow.errors.first_name"
+            ></v-text-field>
+            <v-text-field
+              v-model="editedItem.birthday"
+              label="Geburtsjahr"
+              required
+              :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.birthday"
+              :error-messages="editWindow.errors.birthday"
             ></v-text-field>
             <v-text-field
               v-model="editedItem.email_adfc"
@@ -131,6 +139,15 @@
                 :max="today"
               ></v-date-picker>
             </v-menu>
+            <v-textarea
+              v-model="editedItem.status"
+              label="Status"
+              rows="2"
+              auto-grow
+              :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.status"
+              :error-messages="editWindow.errors.status"
+            ></v-textarea>
             <v-textarea
               v-model="editedItem.address"
               label="Adresse"
