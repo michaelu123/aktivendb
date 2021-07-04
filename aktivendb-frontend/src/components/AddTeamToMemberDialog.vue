@@ -32,6 +32,8 @@
               item-text="title"
               item-value="id"
               label="Rolle"
+              required
+              :rules="[(v) => v != -1 || 'Bitte Rolle wählen']"
               :readonly="
                 editWindow.teamList.editProjectTeamMemberWindow.readonly
               "
@@ -59,6 +61,8 @@
               item-text="name"
               item-value="id"
               label="AG/Gruppe"
+              required
+              :rules="[(v) => v != -1 || 'Bitte AG/Gruppe wählen']"
               :readonly="
                 editWindow.teamList.editProjectTeamMemberWindow.readonly
               "
@@ -111,6 +115,7 @@
             editWindow.teamList.editProjectTeamMemberWindow.saveInProgress
           "
           v-if="!editWindow.teamList.editProjectTeamMemberWindow.readonly"
+          :disabled="invalidForm"
           >Speichern</v-btn
         >
       </v-card-actions>
@@ -131,6 +136,14 @@ export default {
   computed: {
     editProjectTeamMemberNew() {
       return this.editWindow.teamList.editedProjectTeamMemberIndex == -1;
+    },
+    invalidForm() {
+      return (
+        this.editWindow.teamList.editedProjectTeamMember.project_team_member
+          .member_role_id == -1 ||
+        this.editWindow.teamList.editedProjectTeamMember.project_team_member
+          .project_team_id == -1
+      );
     },
   },
 
