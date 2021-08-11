@@ -91,12 +91,12 @@ export default {
         let items = [];
         this.$http
           .get("/api/members?token=" + sessionStorage.getItem("token"))
-          .then(function(response) {
+          .then(function (response) {
             console.log("getMembersFromApi2", response.data);
             items = response.data;
             resolve({ items });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             console.log("ERROR", error);
             reject("Error");
           });
@@ -108,12 +108,12 @@ export default {
         let items = [];
         this.$http
           .get("/api/project-teams?token=" + sessionStorage.getItem("token"))
-          .then(function(response) {
+          .then(function (response) {
             console.log("getProjectTeamsFromApi2", response.data);
             items = response.data;
             resolve({ items });
           })
-          .catch(function(error) {
+          .catch(function (error) {
             console.log("ERROR", error);
             reject("Error");
           });
@@ -121,18 +121,19 @@ export default {
     },
 
     async getMemberFromApi(id) {
-        let response = await this.$http
-          .get("/api/member/" + id + "?token=" + sessionStorage.getItem("token"));
-        let member = response.data;
-        console.log("getMemberFromApi", member);
-        return member;
+      let response = await this.$http.get(
+        "/api/member/" + id + "?token=" + sessionStorage.getItem("token")
+      );
+      let member = response.data;
+      console.log("getMemberFromApi", member);
+      return member;
     },
 
     async storeMembers(rows) {
       for (let rowx = 46; rowx < rows.length; rowx++) {
         const row = rows[rowx];
         const name = row[0];
-        if (!name || name == 'Name') continue;
+        if (!name || name == "Name") continue;
         let x = this.members.findIndex((m) => m.name === name);
         let exi = x >= 0 ? this.members[x] : null;
         let member = this.mapRow(row, exi);
@@ -141,16 +142,18 @@ export default {
           member.name,
           member.id,
           member.project_teams,
-          member.interests,
+          member.interests
         );
-        if (!member.email_private || member.email_private == '') member.email_private = "x@y.de";
-        if (!member.email_adfc || member.email_adfc == '') member.email_adfc = "x@y.de";
+        if (!member.email_private || member.email_private == "")
+          member.email_private = "x@y.de";
+        if (!member.email_adfc || member.email_adfc == "")
+          member.email_adfc = "x@y.de";
         await this.storeMember(member);
 
         let exiMember = await this.getMemberFromApi(member.id);
         let exiAGs = exiMember.project_teams;
         for (let agName of member.project_teams) {
-          if (exiAGs.findIndex(p => p.name == agName) >= 0) continue;
+          if (exiAGs.findIndex((p) => p.name == agName) >= 0) continue;
           let agMember = { ...nullAGMember };
           agMember.member_id = member.id;
           let ag = this.allAGs.find((ag) => ag.name === agName);
@@ -164,11 +167,11 @@ export default {
       if (member.id == null) {
         await this.$http
           .post("/api/member?token=" + sessionStorage.getItem("token"), member)
-          .then(async function(response) {
+          .then(async function (response) {
             console.log(response);
             member.id = response.data.id;
           })
-          .catch(async function(error) {
+          .catch(async function (error) {
             console.log(error);
           });
       } else {
@@ -178,13 +181,13 @@ export default {
               member.id +
               "?token=" +
               sessionStorage.getItem("token"),
-            member,
+            member
           )
-          .then(async function(response) {
+          .then(async function (response) {
             console.log(response);
             member.id = response.data.id;
           })
-          .catch(async function(error) {
+          .catch(async function (error) {
             console.log(error);
           });
       }
@@ -193,11 +196,11 @@ export default {
     async storeAG(ag) {
       await this.$http
         .post("/api/project-team?token=" + sessionStorage.getItem("token"), ag)
-        .then(async function(response) {
+        .then(async function (response) {
           console.log(response);
           ag.id = response.data.id;
         })
-        .catch(async function(error) {
+        .catch(async function (error) {
           console.log(error);
         });
     },
@@ -206,19 +209,20 @@ export default {
       await this.$http
         .post(
           "/api/project-team-member?token=" + sessionStorage.getItem("token"),
-          agMember,
+          agMember
         )
-        .then(async function(response) {
+        .then(async function (response) {
           console.log(response);
           agMember.id = response.data.id;
         })
-        .catch(async function(error) {
+        .catch(async function (error) {
           console.log(error);
         });
     },
 
     mapRow(row, exi) {
-      let interests = exi == null || exi.interests == null ? [] : exi.interests.split(",");
+      let interests =
+        exi == null || exi.interests == null ? [] : exi.interests.split(",");
       let member = exi == null ? { ...nullMember } : { ...exi };
       if (member.project_teams == null) member.project_teams = [];
       if (member.adfc_id == null) member.adfc_id = this.adfcId++;
@@ -250,7 +254,7 @@ export default {
         member[dbColName] = val;
       }
       if (interests.length > 0) {
-        interests = interests.sort().filter((x, i, a) => !i || x != a[i - 1]); // sort unique
+        interests.sort().filter((x, i, a) => !i || x != a[i - 1]); // sort unique
         member.interests = interests.join(",");
       }
       console.log("member", member);

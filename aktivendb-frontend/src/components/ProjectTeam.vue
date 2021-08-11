@@ -212,22 +212,33 @@ export default {
   mounted() {
     this.strictReadonly = sessionStorage.getItem("readonly") == 1;
     this.getAllMembersFromApi().then((data) => {
-      this.allMembers = data.items;
+      let res = data.items;
+      for (let member of res) {
+        member.name = member.last_name + ", " + member.first_name;
+      }
+      res.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
+      this.allMembers = res;
     });
     this.getMemberRolesFromApi().then((data) => {
       this.memberRoles = data.items;
     });
     this.getAllProjectTeamsFromApi().then((data) => {
-      this.projectTeams = data.items.sort((a, b) =>
-        a.name < b.name ? -1 : a.name == b.name ? 0 : 1
-      );
+      let res1 = data.items;
+      let res2 = [];
+      for (let team of res1) {
+        if (team.with_details) {
+          res2.push(team);
+        }
+      }
+      res2.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
+      this.projectTeams = res2;
     });
   },
   methods: {
     handleRequestError(error, scope) {
       this.is_logged_in = false;
       if (error.response) {
-        console.log(error.response);
+        console.log("error5", error.response);
         switch (error.response.status) {
           case 401:
             this.$router.push("login");

@@ -385,7 +385,7 @@ export default {
         if (m.interests != null && m.interests.length > interestsWidth)
           interestsWidth = m.interests.length;
       }
-      console.log(nameWidth, emailPrivateWidth, emailAdfcWidth, interestsWidth);
+      // console.log(nameWidth, emailPrivateWidth, emailAdfcWidth, interestsWidth);
       const schema = [
         // Column #1
         {
@@ -475,7 +475,7 @@ export default {
       me.excelFileName = "";
     },
     prefer(t) {
-      console.log("prefer", t);
+      // console.log("prefer", t);
       this.preferredEmail = "Bevorzugt: " + t;
     },
   },

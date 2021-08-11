@@ -167,9 +167,9 @@ export default {
           me.infoError = true;
           me.error = data.error;
         } else if (error.request) {
-          console.log(error.request);
+          console.log("error6", error.request);
         } else {
-          console.log(error);
+          console.log("error7", error);
         }
       }
     },
@@ -199,9 +199,9 @@ export default {
               me.error = data.error;
             }
           } else if (error.request) {
-            console.log(error.request);
+            console.log("error8", error.request);
           } else {
-            console.log(error);
+            console.log("error9", error);
           }
         });
     },

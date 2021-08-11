@@ -6,9 +6,9 @@
         outlined
         class="mb-2"
         v-on="on"
-        v-if="!strictReadonly"
+        v-if="!editWindow.readonly"
       >
-        <v-icon left>add</v-icon> Mitglied hinzufügen
+        <v-icon left>add</v-icon> Mitglied zu AG hinzufügen
       </v-btn>
     </template>
     <v-card>

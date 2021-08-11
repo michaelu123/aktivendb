@@ -365,25 +365,38 @@ export default {
   mounted() {
     this.strictReadonly = sessionStorage.getItem("readonly") == 1;
     this.getAllMembersFromApi().then((data) => {
-      this.members = data.items;
-      for (let member of this.members) {
-        member.name = member.last_name + ", " + member.first_name;
+      let res1 = data.items;
+      let res2 = [];
+      for (let member of res1) {
+        if (member.with_details) {
+          // else we are not admin and the member is not in one of the teams of which we are a leader
+          member.name = member.last_name + ", " + member.first_name;
+          res2.push(member);
+        }
       }
+      res2.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
+      this.members = res2;
     });
     this.getMemberRolesFromApi().then((data) => {
       this.memberRoles = data.items;
     });
     this.getAllProjectTeamsFromApi().then((data) => {
-      this.allProjectTeams = data.items.sort((a, b) =>
-        a.name < b.name ? -1 : a.name == b.name ? 0 : 1
-      );
+      let res1 = data.items;
+      let res2 = [];
+      for (let team of res1) {
+        if (team.with_details) {
+          res2.push(res1);
+        }
+      }
+      res2.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
+      this.allProjectTeams = res2;
     });
   },
   methods: {
     handleRequestError(error, scope) {
       this.is_logged_in = false;
       if (error.response) {
-        console.log(error.response);
+        console.log("error4", error.response);
         switch (error.response.status) {
           case 401:
             this.$router.push("login");
@@ -414,6 +427,7 @@ export default {
 
       return new Promise((resolve, reject) => {
         let items = [];
+        // console.log("token", sessionStorage.getItem("token"));
 
         this.$http
           .get("/api/members?token=" + sessionStorage.getItem("token"))
