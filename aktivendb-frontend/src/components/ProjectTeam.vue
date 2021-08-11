@@ -211,16 +211,16 @@ export default {
   },
   mounted() {
     this.strictReadonly = sessionStorage.getItem("readonly") == 1;
-    this.getProjectTeamsFromApi().then((data) => {
-      this.projectTeams = data.items.sort((a, b) =>
-        a.name < b.name ? -1 : a.name == b.name ? 0 : 1
-      );
+    this.getAllMembersFromApi().then((data) => {
+      this.allMembers = data.items;
     });
     this.getMemberRolesFromApi().then((data) => {
       this.memberRoles = data.items;
     });
-    this.getAllMembersFromApi().then((data) => {
-      this.allMembers = data.items;
+    this.getAllProjectTeamsFromApi().then((data) => {
+      this.projectTeams = data.items.sort((a, b) =>
+        a.name < b.name ? -1 : a.name == b.name ? 0 : 1
+      );
     });
   },
   methods: {
@@ -252,7 +252,7 @@ export default {
         return false;
       }
     },
-    getProjectTeamsFromApi() {
+    getAllProjectTeamsFromApi() {
       var me = this;
       me.loading = true;
 

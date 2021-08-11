@@ -6,7 +6,7 @@
         outlined
         class="mb-2"
         v-on="on"
-        v-if="!strictReadonly"
+        v-if="!strictReadonly && isAdmin()"
       >
         <v-icon left>add</v-icon> AG Hinzufügen
       </v-btn>
@@ -33,7 +33,7 @@
         ></v-progress-circular>
       </v-card-text>
 
-      <v-card-text v-if="!editWindow.loading">
+      <v-sheet color="grey lighten-3" align="center">
         <v-container>
           <p class="caption">Als Excel-Datei exportieren:</p>
           <v-row class="align-baseline">
@@ -78,6 +78,11 @@
             </v-btn>
             <v-spacer></v-spacer>
           </v-row>
+        </v-container>
+      </v-sheet>
+
+      <v-card-text v-if="!editWindow.loading">
+        <v-container>
           <v-form ref="form" v-model="editWindow.formValid" lazy-validation>
             <v-text-field
               v-model="editedItem.name"

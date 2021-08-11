@@ -12,6 +12,10 @@ export default new Vuex.Store(
       },
     getters:
       {
+        currentUserId: function(state) {
+          if (state.currentUser == null) return 0;
+          return state.currentUser.member_id;
+        }
       },
     mutations:
       {

@@ -64,7 +64,8 @@
             required
           ></v-text-field>
 
-          <v-btn class="my-5"
+          <v-btn
+            class="my-5"
             type="submit"
             block
             outlined
@@ -75,7 +76,8 @@
             Login
           </v-btn>
 
-          <v-btn class="my-5"
+          <v-btn
+            class="my-5"
             @click.prevent="chgPasswd = !chgPasswd"
             type="submit"
             block
@@ -87,7 +89,8 @@
             {{ chgPasswd ? "Passwort nicht ändern" : "Passwort ändern" }}
           </v-btn>
 
-          <v-btn class="my-5"
+          <v-btn
+            class="my-5"
             v-if="chgPasswd"
             @click.prevent="changePasswd"
             type="submit"
@@ -108,7 +111,7 @@
 <script>
 export default {
   name: "Login",
-  data: function() {
+  data: function () {
     return {
       infoError: false,
       email: "",
@@ -130,7 +133,7 @@ export default {
       },
     };
   },
-  mounted: function() {
+  mounted: function () {
     this.password = this.newPasswd1 = this.newPasswd2 = "";
     if (this.$route.name == "logout") {
       this.logout();
@@ -180,14 +183,14 @@ export default {
         .post("/auth/logout", {
           token: sessionStorage.getItem("token"),
         })
-        .then(function(response) {
+        .then(function (response) {
           var data = response.data;
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("readonly");
           me.$store.commit("logged_out");
           me.$router.push("/");
         })
-        .catch(function(error) {
+        .catch(function (error) {
           me.loading = false;
           if (error.response) {
             var data = error.response.data;
@@ -226,7 +229,7 @@ export default {
       try {
         var response = await me.$http.post(
           "/auth/change_password?token=" + sessionStorage.getItem("token"),
-          newPasswd,
+          newPasswd
         );
         me.showAlert("success", "Passwort geändert");
         me.loading = false;

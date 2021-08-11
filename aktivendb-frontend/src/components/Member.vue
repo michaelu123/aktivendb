@@ -40,57 +40,59 @@
         <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
         <v-spacer></v-spacer>
 
-        <v-container v-if="isAdmin">
-          <p class="caption">Als Excel-Datei exportieren:</p>
-          <v-row class="align-baseline">
-            <v-text-field
-              height="60"
-              type="text"
-              outlined
-              color="primary"
-              label="Bitte Dateinamen eingeben"
-              v-model="excelFileName"
-            ></v-text-field>
-            <v-menu offset_y>
-              <template v-slot:activator="{ on: activationEvents }">
-                <v-btn
-                  outlined
-                  color="primary"
-                  height="60"
-                  text
-                  class="mx-4"
-                  v-on="activationEvents"
-                >
-                  {{ preferredEmail }}
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item key="1" @click="prefer('ADFC')">
-                  <v-list-item-title>ADFC-Email-Adresse</v-list-item-title>
-                </v-list-item>
-                <v-list-item key="2" @click="prefer('Privat')">
-                  <v-list-item-title>Private Email-Adresse</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-            <v-progress-circular
-              class="mr-4"
-              v-if="loadingTeams"
-              indeterminate
-              color="primary"
-            ></v-progress-circular>
-            <v-btn
-              height="60"
-              color="primary"
-              type="submit"
-              outlined
-              @click.prevent="exportExcel"
-            >
-              <v-icon left>mdi-file-excel</v-icon> Jetzt exportieren
-            </v-btn>
-            <v-spacer></v-spacer>
-          </v-row>
-        </v-container>
+        <v-sheet color="grey lighten-3" align="center">
+          <v-container v-if="isAdmin()">
+            <p class="caption">Als Excel-Datei exportieren:</p>
+            <v-row class="align-baseline">
+              <v-text-field
+                height="60"
+                type="text"
+                outlined
+                color="primary"
+                label="Bitte Dateinamen eingeben"
+                v-model="excelFileName"
+              ></v-text-field>
+              <v-menu offset_y>
+                <template v-slot:activator="{ on: activationEvents }">
+                  <v-btn
+                    outlined
+                    color="primary"
+                    height="60"
+                    text
+                    class="mx-4"
+                    v-on="activationEvents"
+                  >
+                    {{ preferredEmail }}
+                  </v-btn>
+                </template>
+                <v-list>
+                  <v-list-item key="1" @click="prefer('ADFC')">
+                    <v-list-item-title>ADFC-Email-Adresse</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item key="2" @click="prefer('Privat')">
+                    <v-list-item-title>Private Email-Adresse</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <v-progress-circular
+                class="mr-4"
+                v-if="loadingTeams"
+                indeterminate
+                color="primary"
+              ></v-progress-circular>
+              <v-btn
+                height="60"
+                color="primary"
+                type="submit"
+                outlined
+                @click.prevent="exportExcel"
+              >
+                <v-icon left>mdi-file-excel</v-icon> Jetzt exportieren
+              </v-btn>
+              <v-spacer></v-spacer>
+            </v-row>
+          </v-container>
+        </v-sheet>
 
         <v-text-field
           v-model="search"
@@ -362,7 +364,7 @@ export default {
   },
   mounted() {
     this.strictReadonly = sessionStorage.getItem("readonly") == 1;
-    this.getMembersFromApi().then((data) => {
+    this.getAllMembersFromApi().then((data) => {
       this.members = data.items;
       for (let member of this.members) {
         member.name = member.last_name + ", " + member.first_name;
@@ -406,7 +408,7 @@ export default {
         return false;
       }
     },
-    getMembersFromApi() {
+    getAllMembersFromApi() {
       var me = this;
       me.loading = true;
 
