@@ -51,7 +51,7 @@ https://aktivendb.adfc-muenchen.de/api/user?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz
 
 Fragen:
 
-"npm run-script build" lokal aufrufen, dann public/app kopieren
+"npm run-script build" lokal aufrufen, dann public/app mit winscp kopieren
 isAdmin() 
 
 Buttons wie Hinzufügen oder Ändern nur anzeigen wenn erlaubt

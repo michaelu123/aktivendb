@@ -663,13 +663,13 @@ export default {
         {
           column: "Nachname",
           type: String,
-          value: (member) => member.first_name,
+          value: (member) => member.last_name,
           width: 30,
         },
         {
           column: "Vorname",
           type: String,
-          value: (member) => member.last_name,
+          value: (member) => member.first_name,
           width: 30,
         },
         {
@@ -707,6 +707,59 @@ export default {
           type: String,
           value: (member) => member.interests,
           width: 30,
+        },
+        {
+          column: "Adresse",
+          type: String,
+          value: (member) => member.address,
+          width: 30,
+        },
+        {
+          column: "ADFC-Mitgliedsnummer",
+          type: Number,
+          value: (member) =>
+            member.adfc_id == null ? null : parseInt(member.adfc_id),
+          width: 12,
+        },
+        {
+          column: "Letztes Erste-Hilfe-Training",
+          type: Date,
+          format: "yyyy-mm-dd",
+          value: function (member) {
+            let t = member.latest_first_aid_training;
+            // console.log("d1", t);
+            let d;
+            if (t == null) {
+              d = null; //d = new Date(1900, 0, 1, 12);
+              // console.log("d2", d);
+            } else {
+              let y = parseInt(t.substring(0, 4));
+              let m = parseInt(t.substring(5, 7));
+              let dy = parseInt(t.substring(8, 10));
+              d = new Date(y, m - 1, dy, 6);
+              // console.log("d3", y, m, dy, d);
+            }
+            return d;
+          },
+          width: 15,
+        },
+        {
+          column: "Registriert für Erste-Hilfe-Training",
+          type: Boolean,
+          value: (member) => member.registered_for_first_aid_training == "1",
+          width: 15,
+        },
+        {
+          column: "Geschlecht",
+          type: String,
+          value: (member) => member.gender,
+          width: 3,
+        },
+        {
+          column: "Geburtsjahr",
+          type: String,
+          value: (member) => member.birthday,
+          width: 6,
         },
         {
           column: "Email",
