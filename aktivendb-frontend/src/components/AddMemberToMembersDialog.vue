@@ -150,7 +150,7 @@
             ></v-textarea>
             <v-textarea
               v-model="editedItem.address"
-              label="Adresse"
+              label="Postleitzahl"
               rows="2"
               auto-grow
               :readonly="editWindow.readonly"

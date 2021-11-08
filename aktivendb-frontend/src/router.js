@@ -4,9 +4,11 @@ import Home from "@/views/Home.vue";
 import Member from "@/views/Member.vue";
 import ProjectTeam from "@/views/ProjectTeam.vue";
 import Login from "@/components/forms/Login.vue";
+/* 
 import Import1 from "@/views/Import1.vue";
 import Import2 from "@/views/Import2.vue";
-
+import Import3 from "@/views/Import3.vue";
+*/
 Vue.use(Router)
 
 export default new Router({
@@ -39,7 +41,7 @@ export default new Router({
       component: ProjectTeam,
       props: true,
     },
-    {
+/*  {
       name: "import1",
       path: "/import1",
       component: Import1,
@@ -49,6 +51,12 @@ export default new Router({
       path: "/import2",
       component: Import2,
     },
+    {
+      name: "import3",
+      path: "/import3",
+      component: Import3,
+    },
+*/
 /*
     {
       name: 'project_team_member_detail',

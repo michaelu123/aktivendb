@@ -54,12 +54,14 @@
               readonly
             ></v-text-field>
             <v-select
+              @keypress="keypr"
+              @focus="focus"
               v-if="editProjectTeamMemberNew"
               v-model="
                 editWindow.memberList.editedProjectTeamMember
                   .project_team_member.member_id
               "
-              :items="allMembers"
+              :items="selMembers"
               item-text="name"
               item-value="id"
               label="Person"
@@ -147,6 +149,17 @@ export default {
           .member_id == -1
       );
     },
+    selMembers() {
+      if (this.sname == "") return this.allMembers;
+      return this.allMembers.filter((m) =>
+        m.name.toLowerCase().includes(this.sname)
+      );
+    },
+  },
+  data() {
+    return {
+      sname: "",
+    };
   },
   methods: {
     saveTM() {
@@ -154,6 +167,12 @@ export default {
     },
     closeTM() {
       this.$emit("closeTM"); // closeEditProjectTeamMemberWindow
+    },
+    keypr(x) {
+      this.sname += x.key.toLowerCase();
+    },
+    focus(x) {
+      this.sname = "";
     },
   },
 };

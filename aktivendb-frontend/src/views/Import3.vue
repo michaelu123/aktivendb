@@ -1,7 +1,10 @@
+<!--
+  Habe ich gebraucht, um die AG Tagestouren auf die AGs TT Tourenrad, Mountainbike, Rennrad aufzuteilen..
+-->
 <template>
   <v-content>
     <v-file-input
-      label="Wähle eine Excel-Datei"
+      label="Wähle eine Excel-Datei (AG TT Format)"
       placeholder="Eine Excel-Datei mit Aktiven"
       accept=".xlsx"
       v-model="excelFile"
@@ -29,7 +32,6 @@ const nullMember = {
   reference: null, // ??
   latest_first_aid_training: null,
   gender: null,
-  interests: null,
   latest_contact: null,
   active: 1,
   user: null,
@@ -52,9 +54,9 @@ const colNamesMap = {
   Festnetz: "phone_primary",
   Mobil: "phone_secondary",
   Email: "EMAIL",
-  Tourenrad: "+AG Tagestouren Tourenrad",
-  Rennrad: "+AG Tagestouren Rennrad",
-  Mountainbike: "+AG Tagestouren Mountainbike",
+  Tourenrad: "+AG TT Tourenrad",
+  Rennrad: "+AG TT Rennrad",
+  Mountainbike: "+AG TT Mountainbike",
   Mehrtagestouren: "+AG Mehrtagestouren",
 };
 
@@ -129,26 +131,36 @@ export default {
       return member;
     },
 
+    matches(n, name) {
+      let nr = n.replaceAll(" ", "").replaceAll(",", "").replaceAll("v.", "");
+      console.log("match", name, ":", nr, nr === name);
+      return nr === name;
+    },
+
     async storeMembers(rows) {
       for (let rowx = 1; rowx < rows.length; rowx++) {
         const row = rows[rowx];
         const name = row[0];
-        if (!name || name == "Name") continue;
+        if (!name || name.startsWith("Name,")) continue;
         let x = this.members.findIndex((m) => m.name === name);
+        if (x == -1) {
+          let nr = name
+            .replaceAll(" ", "")
+            .replaceAll(",", "")
+            .replaceAll("v.", "");
+          x = this.members.findIndex((m) => this.matches(m.name, nr));
+          if (x == -1) {
+            console.log("Notfound ", nr);
+          }
+        }
         let exi = x >= 0 ? this.members[x] : null;
         let member = this.mapRow(row, exi);
-        console.log(
-          "Member:",
-          member.name,
-          member.id,
-          member.project_teams,
-          member.interests
-        );
+        console.log("Member:", member.name, member.id, member.project_teams);
         if (!member.email_private || member.email_private == "")
           member.email_private = "x@y.de";
         if (!member.email_adfc || member.email_adfc == "")
           member.email_adfc = "x@y.de";
-        await this.storeMember(member);
+        // await this.storeMember(member);
 
         let exiMember = await this.getMemberFromApi(member.id);
         let exiAGs = exiMember.project_teams;
@@ -221,8 +233,6 @@ export default {
     },
 
     mapRow(row, exi) {
-      let interests =
-        exi == null || exi.interests == null ? [] : exi.interests.split(",");
       let member = exi == null ? { ...nullMember } : { ...exi };
       if (member.project_teams == null) member.project_teams = [];
       if (member.adfc_id == null) member.adfc_id = this.adfcId++;
@@ -234,12 +244,10 @@ export default {
         if (dbColName == null) continue;
         if (dbColName[0] == "+") {
           let agName = dbColName.substring(1);
-          let x = agName.indexOf(" ", 4);
-          if (x > 0) {
-            interests.push(agName.substring(x + 1));
-            agName = agName.substring(0, x);
-          }
           member.project_teams.push(agName);
+          if (agName.substring(0, 5) == "AG TT") {
+            member.project_teams.push("AG Tagestouren");
+          }
           continue;
         }
         if (dbColName == "EMAIL") {
@@ -250,12 +258,8 @@ export default {
           }
           continue;
         }
-        // console.log("colName", colName, "dbColName", dbColName, "val", val);
+        console.log("colName", colName, "dbColName", dbColName, "val", val);
         member[dbColName] = val;
-      }
-      if (interests.length > 0) {
-        interests.sort().filter((x, i, a) => !i || x != a[i - 1]); // sort unique
-        member.interests = interests.join(",");
       }
       console.log("member", member);
       return member;

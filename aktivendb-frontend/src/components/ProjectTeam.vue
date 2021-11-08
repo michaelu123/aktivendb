@@ -214,7 +214,7 @@ export default {
     this.getAllMembersFromApi().then((data) => {
       let res = data.items;
       for (let member of res) {
-        member.name = member.last_name + ", " + member.first_name;
+        member.name = member.last_name.trim() + ", " + member.first_name.trim();
       }
       res.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
       this.allMembers = res;

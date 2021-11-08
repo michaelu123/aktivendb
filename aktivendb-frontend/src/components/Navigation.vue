@@ -6,7 +6,7 @@
     <v-toolbar-items>
       <v-btn text to="/"> Home </v-btn>
       <v-btn text to="/members" v-if="is_logged_in"> Aktive </v-btn>
-      <v-btn text to="/project_teams" v-if="is_logged_in"> AGs </v-btn>
+      <v-btn text to="/project_teams" v-if="is_logged_in"> AG's/OG's </v-btn>
     </v-toolbar-items>
     <div class="flex-grow-1"></div>
     <v-toolbar-items>

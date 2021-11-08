@@ -368,9 +368,13 @@ export default {
       let res1 = data.items;
       let res2 = [];
       for (let member of res1) {
-        if (member.with_details) {
-          // else we are not admin and the member is not in one of the teams of which we are a leader
-          member.name = member.last_name + ", " + member.first_name;
+        if (
+          true || // if team leader does not see all names, he cannot check if new member exists
+          member.with_details // else we are not admin and the member is not in one of the
+          // teams of which we are a leader
+        ) {
+          member.name =
+            member.last_name.trim() + ", " + member.first_name.trim();
           res2.push(member);
         }
       }
@@ -510,7 +514,9 @@ export default {
               me.editedItem.registered_for_first_aid_training
             );
             me.editedItem.name =
-              me.editedItem.last_name + ", " + me.editedItem.first_name;
+              me.editedItem.last_name.trim() +
+              ", " +
+              me.editedItem.first_name.trim();
           } catch (ex) {
             console.log("showItem ex", ex);
           }
@@ -581,7 +587,9 @@ export default {
       if (this.editedIndex > -1) {
         var memberId = this.editedItem.id;
         this.editedItem.name =
-          this.editedItem.last_name + ", " + this.editedItem.first_name;
+          this.editedItem.last_name.trim() +
+          ", " +
+          this.editedItem.first_name.trim();
         this.$http
           .put(
             "/api/member/" +
@@ -709,7 +717,7 @@ export default {
           width: 30,
         },
         {
-          column: "Adresse",
+          column: "Postleitzahl",
           type: String,
           value: (member) => member.address,
           width: 30,
