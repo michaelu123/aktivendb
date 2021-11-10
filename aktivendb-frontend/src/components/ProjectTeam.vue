@@ -348,11 +348,13 @@ export default {
           me.editWindow.loading = false;
           Object.assign(me.projectTeams[me.editedIndex], response.data);
           me.editedItem = Object.assign(item, response.data);
-
           for (let member of me.editedItem.members) {
             member.name =
               member.last_name.trim() + ", " + member.first_name.trim();
           }
+          me.editedItem.members.sort((a, b) =>
+            a.name < b.name ? -1 : a.name == b.name ? 0 : 1
+          );
         })
         .catch(function (error) {
           me.handleRequestError(error);

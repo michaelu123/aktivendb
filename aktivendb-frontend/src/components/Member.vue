@@ -365,21 +365,12 @@ export default {
   mounted() {
     this.strictReadonly = sessionStorage.getItem("readonly") == 1;
     this.getAllMembersFromApi().then((data) => {
-      let res1 = data.items;
-      let res2 = [];
-      for (let member of res1) {
-        if (
-          true || // if team leader does not see all names, he cannot check if new member exists
-          member.with_details // else we are not admin and the member is not in one of the
-          // teams of which we are a leader
-        ) {
-          member.name =
-            member.last_name.trim() + ", " + member.first_name.trim();
-          res2.push(member);
-        }
+      let res = data.items;
+      for (let member of res) {
+        member.name = member.last_name.trim() + ", " + member.first_name.trim();
       }
-      res2.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
-      this.members = res2;
+      res.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
+      this.members = res;
     });
     this.getMemberRolesFromApi().then((data) => {
       this.memberRoles = data.items;
