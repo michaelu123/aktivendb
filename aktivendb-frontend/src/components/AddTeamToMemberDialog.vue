@@ -8,7 +8,7 @@
         v-on="on"
         v-if="!strictReadonly"
       >
-        <v-icon left>add</v-icon> AG Hinzufügen
+        <v-icon left>add</v-icon> Mitglied zu AG Hinzufügen
       </v-btn>
     </template>
     <v-card>

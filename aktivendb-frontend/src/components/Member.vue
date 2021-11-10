@@ -380,7 +380,7 @@ export default {
       let res2 = [];
       for (let team of res1) {
         if (team.with_details) {
-          res2.push(res1);
+          res2.push(team);
         }
       }
       res2.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
