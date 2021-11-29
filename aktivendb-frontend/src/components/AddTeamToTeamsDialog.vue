@@ -359,77 +359,64 @@ export default {
         return;
       }
 
-      let nameWidth = 0;
-      let emailAdfcWidth = 0;
-      let emailPrivateWidth = 0;
-      let telPrimaryWidth = 0;
-      let telSecondaryWidth = 0;
-      let interestsWidth = 0;
-      for (let m of me.members) {
-        if (m.name != null && m.name.length > nameWidth)
-          nameWidth = m.name.length;
-        if (m.email_adfc != null && m.email_adfc.length > emailAdfcWidth)
-          emailAdfcWidth = m.email_adfc.length;
-        if (
-          m.email_private != null &&
-          m.email_private.length > emailPrivateWidth
-        )
-          emailPrivateWidth = m.email_private.length;
-        if (m.phone_primary != null && m.phone_primary.length > telPrimaryWidth)
-          telPrimaryWidth = m.phone_primary.length;
-        if (
-          m.phone_secondary != null &&
-          m.phone_secondary.length > telSecondaryWidth
-        )
-          telSecondaryWidth = m.phone_secondary.length;
-        if (m.interests != null && m.interests.length > interestsWidth)
-          interestsWidth = m.interests.length;
-      }
-      // console.log(nameWidth, emailPrivateWidth, emailAdfcWidth, interestsWidth);
       const schema = [
-        // Column #1
+        /*
         {
           column: "Name",
           type: String,
           value: (member) => member.name,
           width: nameWidth,
         },
-        // Column #2
+        */
+        {
+          column: "Nachname",
+          type: String,
+          value: (member) => member.last_name,
+          width: 30,
+        },
+        {
+          column: "Vorname",
+          type: String,
+          value: (member) => member.first_name,
+          width: 30,
+        },
+        {
+          column: "Geschlecht",
+          type: String,
+          value: (member) => member.gender,
+          width: 10,
+        },
+        {
+          column: "Geburtsjahr",
+          type: String,
+          value: (member) => member.birthday,
+          width: 12,
+        },
+        {
+          column: "Postleitzahl",
+          type: String,
+          value: (member) => member.address,
+          width: 12,
+        },
+        {
+          column: "ADFC-Mitgliedsnummer",
+          type: Number,
+          value: (member) =>
+            member.adfc_id == null ? null : parseInt(member.adfc_id),
+          width: 22,
+        },
         {
           column: "Email-ADFC",
           type: String,
           value: (member) => member.email_adfc,
-          width: emailAdfcWidth,
+          width: 30,
         },
-        // Column #3
         {
           column: "Email-Privat",
           type: String,
           value: (member) => member.email_private,
-          width: emailPrivateWidth,
+          width: 30,
         },
-        // Column #4
-        {
-          column: "Telefon",
-          type: String,
-          value: (member) => member.phone_primary,
-          width: telPrimaryWidth,
-        },
-        // Column #5
-        {
-          column: "Telefon-Alternative",
-          type: String,
-          value: (member) => member.phone_secondary,
-          width: telSecondaryWidth,
-        },
-        // Column #6
-        {
-          column: "Interessen",
-          type: String,
-          value: (member) => member.interests,
-          width: interestsWidth,
-        },
-        // Column #7
         {
           column: "Email",
           type: String,
@@ -448,24 +435,53 @@ export default {
             }
             return email;
           },
-          width:
-            emailAdfcWidth > emailPrivateWidth
-              ? emailAdfcWidth
-              : emailPrivateWidth,
+          width:30,
         },
-        // Column #8
         {
-          column: "Nachname",
+          column: "Telefon",
           type: String,
-          value: (member) => member.first_name,
-          width: nameWidth,
+          value: (member) => member.phone_primary,
+          width: 20,
         },
-        // Column #9
         {
-          column: "Vorname",
+          column: "Telefon-Alternative",
           type: String,
-          value: (member) => member.last_name,
-          width: nameWidth,
+          value: (member) => member.phone_secondary,
+          width: 20,
+        },
+        {
+          column: "Interessen",
+          type: String,
+          value: (member) => member.interests,
+          width: 30,
+        },
+        {
+          column: "Letztes Erste-Hilfe-Training",
+          type: Date,
+          format: "yyyy-mm-dd",
+          value: function (member) {
+            let t = member.latest_first_aid_training;
+            // console.log("d1", t);
+            let d;
+            if (t == null) {
+              d = null; //d = new Date(1900, 0, 1, 12);
+              // console.log("d2", d);
+            } else {
+              let y = parseInt(t.substring(0, 4));
+              let m = parseInt(t.substring(5, 7));
+              let dy = parseInt(t.substring(8, 10));
+              d = new Date(y, m - 1, dy, 6);
+              // console.log("d3", y, m, dy, d);
+            }
+            return d;
+          },
+          width: 15,
+        },
+        {
+          column: "Registriert für Erste-Hilfe-Training",
+          type: Boolean,
+          value: (member) => member.registered_for_first_aid_training == "1",
+          width: 15,
         },
       ];
       await writeXlsxFile(me.members, {

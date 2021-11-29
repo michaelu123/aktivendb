@@ -672,6 +672,31 @@ export default {
           width: 30,
         },
         {
+          column: "Geschlecht",
+          type: String,
+          value: (member) => member.gender,
+          width: 10,
+        },
+        {
+          column: "Geburtsjahr",
+          type: String,
+          value: (member) => member.birthday,
+          width: 12,
+        },
+        {
+          column: "Postleitzahl",
+          type: String,
+          value: (member) => member.address,
+          width: 12,
+        },
+        {
+          column: "ADFC-Mitgliedsnummer",
+          type: Number,
+          value: (member) =>
+            member.adfc_id == null ? null : parseInt(member.adfc_id),
+          width: 22,
+        },
+        {
           column: "Email-ADFC",
           type: String,
           value: (member) => member.email_adfc,
@@ -681,6 +706,26 @@ export default {
           column: "Email-Privat",
           type: String,
           value: (member) => member.email_private,
+          width: 30,
+        },
+        {
+          column: "Email",
+          type: String,
+          value: function (member) {
+            let email = "";
+            if (me.preferredEmail.endsWith("ADFC")) {
+              email =
+                member.email_adfc != ""
+                  ? member.email_adfc
+                  : member.email_private;
+            } else {
+              email =
+                member.email_private != ""
+                  ? member.email_private
+                  : member.email_adfc;
+            }
+            return email;
+          },
           width: 30,
         },
         {
@@ -706,19 +751,6 @@ export default {
           type: String,
           value: (member) => member.interests,
           width: 30,
-        },
-        {
-          column: "Postleitzahl",
-          type: String,
-          value: (member) => member.address,
-          width: 30,
-        },
-        {
-          column: "ADFC-Mitgliedsnummer",
-          type: Number,
-          value: (member) =>
-            member.adfc_id == null ? null : parseInt(member.adfc_id),
-          width: 12,
         },
         {
           column: "Letztes Erste-Hilfe-Training",
@@ -747,38 +779,6 @@ export default {
           type: Boolean,
           value: (member) => member.registered_for_first_aid_training == "1",
           width: 15,
-        },
-        {
-          column: "Geschlecht",
-          type: String,
-          value: (member) => member.gender,
-          width: 3,
-        },
-        {
-          column: "Geburtsjahr",
-          type: String,
-          value: (member) => member.birthday,
-          width: 6,
-        },
-        {
-          column: "Email",
-          type: String,
-          value: function (member) {
-            let email = "";
-            if (me.preferredEmail.endsWith("ADFC")) {
-              email =
-                member.email_adfc != ""
-                  ? member.email_adfc
-                  : member.email_private;
-            } else {
-              email =
-                member.email_private != ""
-                  ? member.email_private
-                  : member.email_adfc;
-            }
-            return email;
-          },
-          width: 30,
         },
       ];
       await writeXlsxFile(me.members, {
