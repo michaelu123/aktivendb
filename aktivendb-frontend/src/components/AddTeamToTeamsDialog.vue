@@ -342,8 +342,8 @@ export default {
       }, 5000);
     },
     isAdmin() {
-      var email = sessionStorage.getItem("email");
-      return email != null && email == "admin@aktivendb.adfc-muenchen.de";
+      return sessionStorage.getItem("is_admin");
+
     },
     async exportExcel() {
       var me = this;

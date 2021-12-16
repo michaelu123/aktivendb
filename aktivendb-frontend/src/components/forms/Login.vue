@@ -152,20 +152,22 @@ export default {
           email: this.email,
           password: this.password,
         });
-        var data = response.data;
-        sessionStorage.setItem("token", data.token);
-        sessionStorage.setItem("readonly", data.user.readonly);
+        var loginData = response.data;
+        console.log("logindata", loginData);
+        sessionStorage.setItem("token", loginData.token);
+        sessionStorage.setItem("readonly", loginData.user.readonly);
+        sessionStorage.setItem("is_admin", loginData.user.is_admin);
         sessionStorage.setItem("email", this.email);
-        me.$store.commit("logged_in", data.user);
+        me.$store.commit("logged_in", loginData.user);
         if (pushIfSucc) {
           me.$router.push("/");
         }
       } catch (error) {
         me.loading = false;
         if (error.response) {
-          var data = error.response.data;
+          var errorData = error.response.data;
           me.infoError = true;
-          me.error = data.error;
+          me.error = errorData.error;
         } else if (error.request) {
           console.log("error6", error.request);
         } else {
