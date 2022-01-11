@@ -8,6 +8,7 @@ import Login from "@/components/forms/Login.vue";
 import Import1 from "@/views/Import1.vue";
 import Import2 from "@/views/Import2.vue";
 import Import3 from "@/views/Import3.vue";
+import ImportSB from "@/views/ImportSB.vue";
 */
 Vue.use(Router)
 
@@ -56,8 +57,11 @@ export default new Router({
       path: "/import3",
       component: Import3,
     },
-*/
-/*
+    {
+      name: "importSB",
+      path: "/importSB",
+      component: ImportSB,
+    },
     {
       name: 'project_team_member_detail',
       path: '/project_team_members/d/:project_team_id?/:member_id?',
