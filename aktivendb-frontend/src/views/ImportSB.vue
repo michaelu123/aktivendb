@@ -1,4 +1,6 @@
 // Used to import results of Serienbrief. Export from Google Sheet as Excel-file, then open with this code
+// Am 17.01.2022 bis 159 STörringer Hans importiert
+
 <template>
   <v-content>
     <v-file-input
@@ -313,6 +315,8 @@ export default {
           }
         } else if (dbColName == "active") {
           member[dbColName] = val == "Nein" ? 0 : 1;
+        } else if (dbColName == "registered_for_first_aid_training") {
+          member[dbColName] = val == "" ? 0 : 1;
         } else {
           if (typeof(val) == "string") val = val.trim();
           member[dbColName] = val;

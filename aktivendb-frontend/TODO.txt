@@ -39,7 +39,7 @@ Ansonsten hab ich an den Berechtigungen geschraubt:
 
 
 Test: POST
-https://aktivendb.adfc-muenchen.de/api/user?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsdW1lbi1qd3QiLCJzdWIiOiI2IyMjIiwiaWF0IjoxNjIzNzM5NjQ1LCJleHAiOjE2MjM3NTA0NDV9.QbAqmrsU3uSVZksGAuZNjkyTWjmD209NZaxpGY7Ehog
+https://aktivendb.adfc-muenchen.de/api/user?token=XXX
 {
     "member_id": 1000,
     "email": "g.abels@gmx.net",
@@ -73,3 +73,9 @@ DELETE FROM project_team_member
 Neue Felder:
 birthday (varchar 255), status(varchar 4000), registered_for_first_aid_training(tinyint 1), 
 first_name(varchar 255), last_name(varchar 255)
+
+
+Debuggen:
+enable Vetur extension
+npm run serve
+open http://localhost:8080/app/
