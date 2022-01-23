@@ -1,5 +1,5 @@
 // Used to import results of Serienbrief. Export from Google Sheet as Excel-file, then open with this code
-// Am 17.01.2022 bis 159 STörringer Hans importiert
+// Am 23.01.2022 bis 89 Koller Elfgard importiert
 
 <template>
   <v-content>
@@ -80,6 +80,8 @@ const colNamesMap = {
   "Aktives Mitglied?": "active"
 };
 
+const emailRegexp = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+
 export default {
   data() {
     return { excelFile: [], members: [], allAGs: [], adfcId: -9999 }; // TODO XXX = select max(adfc_id) from members;
@@ -111,8 +113,7 @@ export default {
         await this.storeMembers(rows);
       })
       .catch(function (error) {
-              console.log("ERROR", error);
-            reject("Error");
+            console.log("ERROR", error);
       });
     },
     getMembersFromApi() {
@@ -255,10 +256,10 @@ export default {
             sessionStorage.getItem("token")
         )
         .then(function (_) {
-          me.members.splice(index, 1);
+          this.members.splice(index, 1);
         })
         .catch(function (error) {
-          console.log("delete failed", this.nameOf(row));
+          console.log("delete failed", this.nameOf(row), error);
         });
     },
 
@@ -288,7 +289,7 @@ export default {
             "?token=" +
             sessionStorage.getItem("token")
         )
-        .then(function (response) {
+        .then(function (_response) {
           console.log("deleteAGMember success", projectTeamMemberId);
         })
         .catch(function (error) {
@@ -317,6 +318,15 @@ export default {
           member[dbColName] = val == "Nein" ? 0 : 1;
         } else if (dbColName == "registered_for_first_aid_training") {
           member[dbColName] = val == "" ? 0 : 1;
+        } else if (dbColName.startsWith("email_")) {
+          if (row[colNamesIdx["Nachname"]] == "Volkmer") 
+            console.log("Volkmer!");
+          val = val.toLowerCase(val);
+          let m = val.match(emailRegexp);
+          if (!m || m[0] != val) { 
+            console.log("invalid email",val);
+            val = "";
+          }
         } else {
           if (typeof(val) == "string") val = val.trim();
           member[dbColName] = val;

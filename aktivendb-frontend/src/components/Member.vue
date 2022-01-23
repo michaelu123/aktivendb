@@ -780,6 +780,12 @@ export default {
           value: (member) => member.registered_for_first_aid_training == "1",
           width: 15,
         },
+        {
+          column: "Aktiv",
+          type: Boolean,
+          value: (member) => member.active == "1",
+          width: 15,
+        },
       ];
       await writeXlsxFile(me.members, {
         schema,
