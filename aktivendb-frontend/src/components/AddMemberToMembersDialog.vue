@@ -504,7 +504,7 @@ export default {
       }
     },
     isAdmin() {
-      return sessionStorage.getItem("is_admin");
+      return sessionStorage.getItem("is_admin") == "true";
     },
   },
 };

@@ -342,7 +342,7 @@ export default {
       }, 5000);
     },
     isAdmin() {
-      return sessionStorage.getItem("is_admin");
+      return sessionStorage.getItem("is_admin") == "true";
 
     },
     async exportExcel() {
@@ -481,6 +481,12 @@ export default {
           column: "Registriert für Erste-Hilfe-Training",
           type: Boolean,
           value: (member) => member.registered_for_first_aid_training == "1",
+          width: 15,
+        },
+        {
+          column: "Aktiv",
+          type: Boolean,
+          value: (member) => member.active == "1",
           width: 15,
         },
       ];

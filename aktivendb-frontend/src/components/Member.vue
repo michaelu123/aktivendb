@@ -37,7 +37,11 @@
           @saveEW="saveEditWindow"
         ></AddMemberToMembersDialog>
         <v-spacer></v-spacer>
-        <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
+        <v-row>
+          <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
+          &nbsp;&nbsp;&nbsp;
+          <v-switch  v-if="!isAdmin()" v-model="agSwitch" label="Nur AG/OG-Mitglieder"> </v-switch>
+        </v-row>
         <v-spacer></v-spacer>
 
         <v-sheet color="grey lighten-3" align="center">
@@ -164,6 +168,7 @@ export default {
       strictReadonly: false,
       searchEditWindow: "",
       activeSwitch: true,
+      agSwitch: false,
       loading: true,
       editWindow: {
         loading: false,
@@ -238,7 +243,10 @@ export default {
         {
           text: "Aktiv",
           value: "active",
-          filter: (value) => {
+          filter: (value, _se, item) => {
+            // could not get v-data-table.custom-filter to work
+            if (this.agSwitch && !item.with_details) return false;
+            
             if (!this.activeSwitch) return true;
 
             return this.checkForTrue(value);
@@ -616,8 +624,7 @@ export default {
       }
     },
     isAdmin() {
-      return sessionStorage.getItem("is_admin");
-
+      return sessionStorage.getItem("is_admin") == "true";
     },
     async getMemberFromApi(id) {
       let response = await this.$http.get(

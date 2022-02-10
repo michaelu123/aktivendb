@@ -317,7 +317,7 @@ export default {
         } else if (dbColName == "active") {
           member[dbColName] = val == "Nein" ? 0 : 1;
         } else if (dbColName == "registered_for_first_aid_training") {
-          member[dbColName] = val == "" ? 0 : 1;
+          member[dbColName] = val.toLowerCase().startsWith("ja") ? 1 : 0;
         } else if (dbColName.startsWith("email_")) {
           if (row[colNamesIdx["Nachname"]] == "Volkmer") 
             console.log("Volkmer!");
