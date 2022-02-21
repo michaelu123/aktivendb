@@ -271,6 +271,10 @@ export default {
           value: "birthday",
         },
         {
+          text: "Geschlecht",
+          value: "gender",
+        },
+        {
           text: "E-Mail (Privat)",
           value: "email_private",
         },

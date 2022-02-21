@@ -83,6 +83,17 @@
               :error="!!editWindow.errors.birthday"
               :error-messages="editWindow.errors.birthday"
             ></v-text-field>
+
+            <v-text-field
+              v-model="editedItem.gender"
+              label="Geschlecht"
+              :rules="[(v) => (v == 'M' || v == 'W' || v == '')  || 'Bitte M oder W oder nichts angeben']"
+              :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.gender"
+              :error-messages="editWindow.errors.gender"
+            ></v-text-field>
+
+
             <v-text-field
               v-model="editedItem.email_adfc"
               label="E-mail (ADFC)"
