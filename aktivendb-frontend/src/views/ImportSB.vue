@@ -10,8 +10,27 @@
       v-model="excelFile"
     >
     </v-file-input>
-    <v-btn v-if="excelFileSet" @click="importFile">Import </v-btn>
-  </v-content>
+
+    <v-select
+      v-model="phase"
+      :items="phases"
+      item-text="Phase"
+      item-value="id"
+      label="Phase"
+      required 
+    ></v-select>
+
+    <v-btn v-if="excelFileAndPhaseSet" @click="importFile">Import </v-btn>
+
+    <v-textarea v-if="messagesSet"
+      v-model="message"
+      label="Ergebnis"
+      rows="10"
+      no-resize
+    ></v-textarea>
+
+
+</v-content>
 </template>
 
 <script>
@@ -24,7 +43,6 @@ import readXlsxFile from "read-excel-file";
 // Phase 1: check that names in DB and Excel file match
 // Phase 2: delete members that don't want to be stored
 // Phase 3: update members and their AGs
-const phase = 1; // start with phase 1 so that names are checked first
 
 const nullMember = {
   id: null,
@@ -84,11 +102,21 @@ const emailRegexp = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-
 
 export default {
   data() {
-    return { excelFile: [], members: [], allAGs: [], adfcId: -9999 }; // TODO XXX = select max(adfc_id) from members;
+    return { 
+      excelFile: [], 
+      members: [], 
+      allAGs: [], 
+      phase: "",
+      phases: ["Namen überprüfen", "Widersprechende löschen", "Ändern oder Neuanlegen"],
+      message: ""
+    }; 
   },
   computed: {
-    excelFileSet() {
-      return this.excelFile.length != 0;
+    excelFileAndPhaseSet() {
+      return this.excelFile.length != 0 && this.phase != "";
+    },
+    messagesSet() {
+      return this.message != "";
     },
   },
   async mounted() {
@@ -165,19 +193,31 @@ export default {
     },
 
     async storeMembers(rows) {
+      let phase = this.phases.findIndex(x => x == this.phase) + 1;
+      this.message = ""
+      if (phase < 1 || phase > 3) {
+        console.log("phase invalid", this.phase);
+        return;
+      }
+      console.log("phase", this.phase, phase);
       for (let rowx = 1; rowx < rows.length; rowx++) {
         const row = rows[rowx];
         const vorname = row[colNamesIdx["Vorname"]].trim();
         const nachname = row[colNamesIdx["Nachname"]].trim();
         let x = this.members.findIndex((m) => m.first_name.trim() === vorname && m.last_name.trim() === nachname);
         if (x == -1) {
-          if (row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") continue;
+          if (row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") {
+            this.message += "Gelöscht wird: " + this.nameOf(row) + "\n"
+            continue;
+          }
           console.log("unknown or new", this.nameOf(row));
-        }
+          this.message += "Unbekannt oder neu: " + this.nameOf(row) + "\n";
+         }
         if (phase == 1) continue;  // first make sure all names in DB and Excel match
         if (phase == 2) { // delete member if storage not wanted
           if (x != -1 && row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") {
             await this.deleteMember(row, x);
+            this.message += "Gelöscht: " + this.nameOf(row) + "\n"
           }
           continue;
         }
@@ -190,6 +230,12 @@ export default {
           member.project_teams,
           member.interests
         );
+        if (member.id == null) {
+          this.message += "Neu angelegt: " + this.nameOf(row) + "\n"
+        } else {
+          this.message += "Geändert: " + this.nameOf(row) + "\n"
+        }
+        return;
         await this.storeMember(member);
         // now we get the member again, but this time with project_teams
         let exiMember = await this.getMemberFromApi(member.id);
@@ -248,7 +294,6 @@ export default {
     async deleteMember(row, index) {
       var memberId = this.members[index].id;
       console.log("delete", this.nameOf(row), memberId);
-      if (phase != 2) return;
       this.$http
         .delete(
           "/api/member/" +
