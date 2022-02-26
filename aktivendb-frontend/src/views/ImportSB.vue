@@ -1,5 +1,5 @@
 // Used to import results of Serienbrief. Export from Google Sheet as Excel-file, then open with this code
-// Am 23.01.2022 bis 89 Koller Elfgard importiert
+// Am 26.02.2022 bis Eva Mahling importiert
 
 <template>
   <v-content>
@@ -171,17 +171,17 @@ export default {
         const nachname = row[colNamesIdx["Nachname"]].trim();
         let x = this.members.findIndex((m) => m.first_name.trim() === vorname && m.last_name.trim() === nachname);
         if (x == -1) {
-          console.log("unknown", this.nameOf(row));
-          continue;
+          if (row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") continue;
+          console.log("unknown or new", this.nameOf(row));
         }
         if (phase == 1) continue;  // first make sure all names in DB and Excel match
         if (phase == 2) { // delete member if storage not wanted
-          if (row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") {
+          if (x != -1 && row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") {
             await this.deleteMember(row, x);
           }
           continue;
         }
-        let exi = this.members[x];
+        let exi = x == -1 ? null : this.members[x];
         let member = this.mapRow(row, exi);
         console.log(
           "Member:",
@@ -191,6 +191,7 @@ export default {
           member.interests
         );
         await this.storeMember(member);
+        // now we get the member again, but this time with project_teams
         let exiMember = await this.getMemberFromApi(member.id);
         let exiAGs = exiMember.project_teams;
         for (let agName of member.project_teams) {
@@ -297,9 +298,8 @@ export default {
         });
     },
 
-
     mapRow(row, exi) {
-      let member = { ...exi };
+      let member = exi == null ? { ...nullMember } : { ...exi };
       if (member.project_teams == null) member.project_teams = [];
 
       for (let i = 0; i < colNames.length; i++) {
