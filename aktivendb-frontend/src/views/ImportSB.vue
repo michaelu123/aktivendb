@@ -235,7 +235,6 @@ export default {
         } else {
           this.message += "Geändert: " + this.nameOf(row) + "\n"
         }
-        return;
         await this.storeMember(member);
         // now we get the member again, but this time with project_teams
         let exiMember = await this.getMemberFromApi(member.id);
@@ -344,6 +343,7 @@ export default {
     },
 
     mapRow(row, exi) {
+      nullMember.project_teams = []
       let member = exi == null ? { ...nullMember } : { ...exi };
       if (member.project_teams == null) member.project_teams = [];
 
@@ -364,14 +364,13 @@ export default {
         } else if (dbColName == "registered_for_first_aid_training") {
           member[dbColName] = val.toLowerCase().startsWith("ja") ? 1 : 0;
         } else if (dbColName.startsWith("email_")) {
-          if (row[colNamesIdx["Nachname"]] == "Volkmer") 
-            console.log("Volkmer!");
           val = val.toLowerCase(val);
           let m = val.match(emailRegexp);
           if (!m || m[0] != val) { 
             console.log("invalid email",val);
             val = "";
           }
+          member[dbColName] = val;
         } else {
           if (typeof(val) == "string") val = val.trim();
           member[dbColName] = val;
