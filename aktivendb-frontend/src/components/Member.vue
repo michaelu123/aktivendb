@@ -798,7 +798,14 @@ export default {
           width: 15,
         },
       ];
-      await writeXlsxFile(me.members, {
+
+      let members = me.members;
+      if (this.activeSwitch) {
+        members = members.filter(m => m.active == "1")
+      }
+
+
+      await writeXlsxFile(members, {
         schema,
         fileName: me.excelFileName,
       });
