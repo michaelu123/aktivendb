@@ -1,5 +1,5 @@
 // Used to import results of Serienbrief. Export from Google Sheet as Excel-file, then open with this code
-// Am 26.02.2022 bis Eva Mahling importiert
+// Am 06.09.22 bis Burhenne Roman 246 importiert
 
 <template>
   <v-content>
@@ -352,6 +352,7 @@ export default {
         let dbColName = colNamesMap[colName];
         if (dbColName == null) continue;
         let val = row[i];
+        if (dbColName.startsWith("email_") && (val == null || val === "")) val = "undef@undef.de";
         if (val == null || val === "") continue;
         if (colName == "AGs") {
           for (let ag of this.allAGs) {

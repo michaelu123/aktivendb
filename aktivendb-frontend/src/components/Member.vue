@@ -441,6 +441,11 @@ export default {
           .then(function (response) {
             me.loading = false;
             items = response.data;
+            for (let member of items) {
+              if (member.email_adfc == "undef@undef.de") member.email_adfc = "";
+              if (member.email_private == "undef@undef.de") member.email_private = "";
+            }
+            
             resolve({ items });
           })
           .catch(function (error) {
@@ -509,8 +514,11 @@ export default {
         )
         .then(function (response) {
           me.editWindow.loading = false;
-          Object.assign(me.members[me.editedIndex], response.data);
-          me.editedItem = Object.assign(item, response.data);
+          let member = response.data;
+          if (member.email_adfc == "undef@undef.de") member.email_adfc = "";
+          if (member.email_private == "undef@undef.de") member.email_private = "";
+          Object.assign(me.members[me.editedIndex], member);
+          me.editedItem = Object.assign(item, member);
           try {
             me.editedItem.active = me.checkForTrue(me.editedItem.active);
             me.editedItem.registered_for_first_aid_training = me.checkForTrue(
@@ -635,6 +643,8 @@ export default {
         "/api/member/" + id + "?token=" + sessionStorage.getItem("token")
       );
       let member = response.data;
+      if (member.email_adfc == "undef@undef.de") member.email_adfc = "";
+      if (member.email_private == "undef@undef.de") member.email_private = "";
       return member;
     },
     async exportExcel() {
