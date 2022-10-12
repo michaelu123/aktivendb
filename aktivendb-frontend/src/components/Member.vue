@@ -151,6 +151,26 @@
           </v-icon>
         </v-avatar>
       </template>
+      <template v-slot:item.responded_to_questionaire="{ item }">
+        <v-avatar
+          color="green"
+          size="24"
+          v-if="checkForTrue(item.responded_to_questionaire)"
+        >
+          <v-icon small dense class="white--text">
+            mdi-checkbox-marked-circle-outline
+          </v-icon>
+        </v-avatar>
+        <v-avatar
+          color="red"
+          size="24"
+          v-if="!checkForTrue(item.responded_to_questionaire)"
+        >
+          <v-icon small dense class="white--text">
+            mdi-checkbox-blank-circle-outline
+          </v-icon>
+        </v-avatar>
+      </template>
     </v-data-table>
   </v-card>
 </template>
@@ -158,6 +178,7 @@
 <script>
 import AddMemberToMembersDialog from "./AddMemberToMembersDialog.vue";
 import writeXlsxFile from "write-excel-file";
+import makeSchema from "./common"
 
 export default {
   components: { AddMemberToMembersDialog },
@@ -179,6 +200,7 @@ export default {
         errors: {},
         showLatestContactDatePicker: false,
         showLatestFirstAidTrainingDatePicker: false,
+        showQuestResponseDatePicker: false,
         teamList: {
           headers: [
             {
@@ -284,7 +306,7 @@ export default {
         },
         {
           text: "Telefon",
-          value: "phone_primary",
+          value: "phone",
         },
         {
           text: "Letzter Kontakt",
@@ -301,6 +323,18 @@ export default {
         {
           text: "Registriert für Schulung",
           value: "registered_for_first_aid_training",
+        },
+        {
+          text: "Nächste 1. Hilfe Schulung",
+          value: "next_first_aid_training",
+        },
+        {
+          text: "Fragebogen ausgefüllt",
+          value: "responded_to_questionaire",
+        },
+        {
+          text: "Datum Fragebogen",
+          value: "responded_to_questionaire_at",
         },
       ],
       editedIndex: -1,
@@ -319,11 +353,14 @@ export default {
         admin_comments: "",
         reference: "",
         latest_first_aid_training: null,
+        next_first_aid_training: null,
         gender: "",
         interests: "",
         latest_contact: null,
         active: true,
         registered_for_first_aid_training: false,
+        responded_to_questionaire: false,
+        responded_to_questionaire_at: null,
         user: null,
         project_teams: [],
       },
@@ -339,11 +376,14 @@ export default {
         admin_comments: "",
         reference: "",
         latest_first_aid_training: null,
+        next_first_aid_training: null,
         gender: "",
         interests: "",
         latest_contact: null,
         active: true,
         registered_for_first_aid_training: false,
+        responded_to_questionaire: false,
+        responded_to_questionaire_at: null,
         user: null,
         project_teams: [],
       },
@@ -380,6 +420,7 @@ export default {
       let res = data.items;
       for (let member of res) {
         member.name = member.last_name.trim() + ", " + member.first_name.trim();
+        member.phone = member.phone_primary ? member.phone_primary : member.phone_secondary;
       }
       res.sort((a, b) => (a.name < b.name ? -1 : a.name == b.name ? 0 : 1));
       this.members = res;
@@ -524,6 +565,9 @@ export default {
             me.editedItem.registered_for_first_aid_training = me.checkForTrue(
               me.editedItem.registered_for_first_aid_training
             );
+            me.editedItem.responded_to_questionaire = me.checkForTrue(
+              me.editedItem.responded_to_questionaire
+            );
             me.editedItem.name =
               me.editedItem.last_name.trim() +
               ", " +
@@ -558,7 +602,7 @@ export default {
               "?token=" +
               sessionStorage.getItem("token")
           )
-          .then(function (_) {
+          .then(function () {
             me.members.splice(index, 1);
 
             me.showAlert("success", "Gelöscht");
@@ -671,143 +715,7 @@ export default {
       } finally {
         this.loadingTeams = false;
       }
-      const schema = [
-        /*
-       {
-          column: "Name",
-          type: String,
-          value: (member) => member.name,
-          width: 30,
-        },
-        */
-        {
-          column: "Nachname",
-          type: String,
-          value: (member) => member.last_name,
-          width: 30,
-        },
-        {
-          column: "Vorname",
-          type: String,
-          value: (member) => member.first_name,
-          width: 30,
-        },
-        {
-          column: "Geschlecht",
-          type: String,
-          value: (member) => member.gender,
-          width: 10,
-        },
-        {
-          column: "Geburtsjahr",
-          type: String,
-          value: (member) => member.birthday,
-          width: 12,
-        },
-        {
-          column: "Postleitzahl",
-          type: String,
-          value: (member) => member.address,
-          width: 12,
-        },
-        {
-          column: "ADFC-Mitgliedsnummer",
-          type: Number,
-          value: (member) =>
-            member.adfc_id == null ? null : parseInt(member.adfc_id),
-          width: 22,
-        },
-        {
-          column: "Email-ADFC",
-          type: String,
-          value: (member) => member.email_adfc,
-          width: 30,
-        },
-        {
-          column: "Email-Privat",
-          type: String,
-          value: (member) => member.email_private,
-          width: 30,
-        },
-        {
-          column: "Email",
-          type: String,
-          value: function (member) {
-            let email = "";
-            if (me.preferredEmail.endsWith("ADFC")) {
-              email =
-                member.email_adfc != ""
-                  ? member.email_adfc
-                  : member.email_private;
-            } else {
-              email =
-                member.email_private != ""
-                  ? member.email_private
-                  : member.email_adfc;
-            }
-            return email;
-          },
-          width: 30,
-        },
-        {
-          column: "Telefon",
-          type: String,
-          value: (member) => member.phone_primary,
-          width: 20,
-        },
-        {
-          column: "Telefon-Alternative",
-          type: String,
-          value: (member) => member.phone_secondary,
-          width: 20,
-        },
-        {
-          column: "AGs",
-          type: String,
-          value: (member) => member.ags,
-          width: 30,
-        },
-        {
-          column: "Interessen",
-          type: String,
-          value: (member) => member.interests,
-          width: 30,
-        },
-        {
-          column: "Letztes Erste-Hilfe-Training",
-          type: Date,
-          format: "yyyy-mm-dd",
-          value: function (member) {
-            let t = member.latest_first_aid_training;
-            // console.log("d1", t);
-            let d;
-            if (t == null) {
-              d = null; //d = new Date(1900, 0, 1, 12);
-              // console.log("d2", d);
-            } else {
-              let y = parseInt(t.substring(0, 4));
-              let m = parseInt(t.substring(5, 7));
-              let dy = parseInt(t.substring(8, 10));
-              d = new Date(y, m - 1, dy, 6);
-              // console.log("d3", y, m, dy, d);
-            }
-            return d;
-          },
-          width: 15,
-        },
-        {
-          column: "Registriert für Erste-Hilfe-Training",
-          type: Boolean,
-          value: (member) => member.registered_for_first_aid_training == "1",
-          width: 15,
-        },
-        {
-          column: "Aktiv",
-          type: Boolean,
-          value: (member) => member.active == "1",
-          width: 15,
-        },
-      ];
+      const schema = makeSchema(me);
 
       let members = me.members;
       if (this.activeSwitch) {

@@ -194,6 +194,7 @@
 <script>
 import AddMemberToTeamDialog from "./AddMemberToTeamDialog.vue";
 import writeXlsxFile from "write-excel-file";
+import makeSchema from "./common"
 
 export default {
   components: { AddMemberToTeamDialog },
@@ -319,7 +320,7 @@ export default {
               "?token=" +
               sessionStorage.getItem("token")
           )
-          .then(function (response) {
+          .then(function () {
             var tmpEditedItem = me.editedItem;
             tmpEditedItem.members.splice(index, 1);
 
@@ -359,138 +360,14 @@ export default {
         return;
       }
 
-      const schema = [
-        /*
-        {
-          column: "Name",
-          type: String,
-          value: (member) => member.name,
-          width: nameWidth,
-        },
-        */
-        {
-          column: "Nachname",
-          type: String,
-          value: (member) => member.last_name,
-          width: 30,
-        },
-        {
-          column: "Vorname",
-          type: String,
-          value: (member) => member.first_name,
-          width: 30,
-        },
-        {
-          column: "Geschlecht",
-          type: String,
-          value: (member) => member.gender,
-          width: 10,
-        },
-        {
-          column: "Geburtsjahr",
-          type: String,
-          value: (member) => member.birthday,
-          width: 12,
-        },
-        {
-          column: "Postleitzahl",
-          type: String,
-          value: (member) => member.address,
-          width: 12,
-        },
-        {
-          column: "ADFC-Mitgliedsnummer",
-          type: Number,
-          value: (member) =>
-            member.adfc_id == null ? null : parseInt(member.adfc_id),
-          width: 22,
-        },
-        {
-          column: "Email-ADFC",
-          type: String,
-          value: (member) => member.email_adfc,
-          width: 30,
-        },
-        {
-          column: "Email-Privat",
-          type: String,
-          value: (member) => member.email_private,
-          width: 30,
-        },
-        {
-          column: "Email",
-          type: String,
-          value: function (member) {
-            let email = "";
-            if (me.preferredEmail.endsWith("ADFC")) {
-              email =
-                member.email_adfc != ""
-                  ? member.email_adfc
-                  : member.email_private;
-            } else {
-              email =
-                member.email_private != ""
-                  ? member.email_private
-                  : member.email_adfc;
-            }
-            return email;
-          },
-          width:30,
-        },
-        {
-          column: "Telefon",
-          type: String,
-          value: (member) => member.phone_primary,
-          width: 20,
-        },
-        {
-          column: "Telefon-Alternative",
-          type: String,
-          value: (member) => member.phone_secondary,
-          width: 20,
-        },
-        {
-          column: "Interessen",
-          type: String,
-          value: (member) => member.interests,
-          width: 30,
-        },
-        {
-          column: "Letztes Erste-Hilfe-Training",
-          type: Date,
-          format: "yyyy-mm-dd",
-          value: function (member) {
-            let t = member.latest_first_aid_training;
-            // console.log("d1", t);
-            let d;
-            if (t == null) {
-              d = null; //d = new Date(1900, 0, 1, 12);
-              // console.log("d2", d);
-            } else {
-              let y = parseInt(t.substring(0, 4));
-              let m = parseInt(t.substring(5, 7));
-              let dy = parseInt(t.substring(8, 10));
-              d = new Date(y, m - 1, dy, 6);
-              // console.log("d3", y, m, dy, d);
-            }
-            return d;
-          },
-          width: 15,
-        },
-        {
-          column: "Registriert für Erste-Hilfe-Training",
-          type: Boolean,
-          value: (member) => member.registered_for_first_aid_training == "1",
-          width: 15,
-        },
-        {
-          column: "Aktiv",
-          type: Boolean,
-          value: (member) => member.active == "1",
-          width: 15,
-        },
-      ];
-      await writeXlsxFile(me.members, {
+      const schema = makeSchema(me);
+
+      let members = me.members;
+      if (this.activeSwitch) {
+        members = members.filter(m => m.active == "1")
+      }
+
+      await writeXlsxFile(members, {
         schema,
         fileName: me.excelFileName,
       });

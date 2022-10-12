@@ -221,6 +221,33 @@
               :error="!!editWindow.errors.interests"
               :error-messages="editWindow.errors.interests"
             ></v-textarea>
+            <v-menu
+              v-model="editWindow.showQuestResponseDatePicker"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              transition="scale-transition"
+              offset-y
+              min-width="290px"
+              :disabled="editWindow.readonly"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="editedItem.responded_to_questionaire_at"
+                  label="Datum Fragebogen"
+                  prepend-icon="event"
+                  readonly
+                  v-on="on"
+                  :error="!!editWindow.errors.responded_to_questionaire_at"
+                  :error-messages="editWindow.errors.responded_to_questionaire_at"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="editedItem.responded_to_questionaire_at"
+                @input="editWindow.showQuestResponseDatePicker = false"
+                locale="de-de"
+                :max="today"
+              ></v-date-picker>
+            </v-menu>
             <v-row>
               <v-switch
                 class="mr-5"
@@ -239,8 +266,17 @@
                 :value-comparator="checkForTrue"
                 :error="!!editWindow.errors.active"
                 :error-messages="editWindow.errors.active"
-              ></v-switch
-            ></v-row>
+              ></v-switch>
+              <v-switch
+                class="ml-5"
+                v-model="editedItem.responded_to_questionaire"
+                label="Fragebogen ausgefüllt"
+                :disabled="editWindow.readonly"
+                :value-comparator="checkForTrue"
+                :error="!!editWindow.errors.active"
+                :error-messages="editWindow.errors.active"
+              ></v-switch>
+            </v-row>
           </v-form>
           <template v-if="editedItem.id > 0">
             <v-data-table
