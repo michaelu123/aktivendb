@@ -36,7 +36,7 @@
 <script>
 // see https://stackoverflow.com/questions/5402949/mysql-cant-make-column-auto-increment
 
-import readXlsxFile from "read-excel-file";
+import readXlsxFile, { parseExcelDate } from "read-excel-file";
 
 
 
@@ -56,6 +56,7 @@ const nullMember = {
   admin_comments: null,
   reference: "", // ??
   latest_first_aid_training: null,
+  next_first_aid_training: null,
   gender: null,
   interests: null,
   latest_contact: null,
@@ -63,6 +64,8 @@ const nullMember = {
   birthday: "",
   status: "",
   registered_for_first_aid_training: 0,
+  responded_to_questionaire: 0,
+  responded_to_questionaire_at: null,
   first_name: "",
   last_name: "",
   project_teams: [],
@@ -95,7 +98,8 @@ const colNamesMap = {
   "Letztes Erste-Hilfe-Training": "latest_first_aid_training",
   "Registriert für ein Erste-Hilfe-Training?": "registered_for_first_aid_training",
   "Mit Speicherung einverstanden?": "daccord",
-  "Aktives Mitglied?": "active"
+  "Aktives Mitglied?": "active",
+  "Zeitstempel": "responded_to_questionaire_at",
 };
 
 const emailRegexp = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
@@ -133,7 +137,22 @@ export default {
       console.log("excelFile", this.excelFile);
       readXlsxFile(this.excelFile)
       .then(async (rows) => {
+        // cannot read "Zeitstempel" from xlsx file, it returns a number, that can be converted to a date, which is then off by some 13 hours.
+        // I took two timestamps, got a diff as number (0.5192341087968089), computed the number of secs between the timestamps (44862),
+        // and multiplied this by 13*60*60 sec . No idea what this is all about.
+        let rlen = rows.length;
         console.log("len", rows.length);
+        let corr = 13.0 *60.0*60.0 * 0.5192341087968089 / 44862.0;
+        console.log("Corr", corr);
+        for (let row = 1; row < rlen; row++) {
+          let x = rows[row][0];
+          let t = parseExcelDate(x - corr);
+          let d = t.toISOString(t);
+          d = d.substring(0, 10);
+          // console.log(rows[row][1], "Z", z);
+          rows[row][0] = d;
+        }
+      
         colNames = rows[0];
         for (let i = 0; i < colNames.length; i++) {
           colNamesIdx[colNames[i]] = i;
@@ -232,8 +251,16 @@ export default {
         );
         if (member.id == null) {
           this.message += "Neu angelegt: " + this.nameOf(row) + "\n"
+          if (member.latest_first_aid_training) {
+            console.log("New member:", member.name, "wants to set EHK date to", member.latest_first_aid_training);
+            member.latest_first_aid_training = null;
+          }
         } else {
           this.message += "Geändert: " + this.nameOf(row) + "\n"
+          if (member.latest_first_aid_training != exi.latest_first_aid_training) {
+            console.log("Member:", member.name, "wants to change EHK date from ", exi.latest_first_aid_training, "to", member.latest_first_aid_training);
+            member.latest_first_aid_training = exi.latest_first_aid_training;
+          }
         }
         await this.storeMember(member);
         // now we get the member again, but this time with project_teams
@@ -245,8 +272,8 @@ export default {
           agMember.member_id = member.id;
           let ag = this.allAGs.find((ag) => ag.name === agName);
           agMember.project_team_id = ag.id;
-          console.log("add member ", this.nameOf(row), "to", ag.name, ag.id);
-          await this.storeAGMember(agMember);
+          console.log("Member:", this.nameOf(row), " wants to be added to", ag.name);
+          // await this.storeAGMember(agMember);  // nicht mehr, soll der AG-Leiter machen
         }
 
         for (let team of exiMember.project_teams) {
