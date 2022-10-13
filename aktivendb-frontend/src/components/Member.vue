@@ -200,6 +200,7 @@ export default {
         errors: {},
         showLatestContactDatePicker: false,
         showLatestFirstAidTrainingDatePicker: false,
+        showNextFirstAidTrainingDatePicker: false,
         showQuestResponseDatePicker: false,
         teamList: {
           headers: [

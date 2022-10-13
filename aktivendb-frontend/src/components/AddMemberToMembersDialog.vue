@@ -185,6 +185,15 @@
               :error="!!editWindow.errors.admin_comments"
               :error-messages="editWindow.errors.admin_comments"
             ></v-textarea>
+            <v-textarea
+              v-model="editedItem.interests"
+              label="Interessen"
+              rows="2"
+              auto-grow
+              :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.interests"
+              :error-messages="editWindow.errors.interests"
+            ></v-textarea>
             <v-menu
               v-model="editWindow.showLatestFirstAidTrainingDatePicker"
               :close-on-content-click="false"
@@ -212,15 +221,33 @@
                 :max="today"
               ></v-date-picker>
             </v-menu>
-            <v-textarea
-              v-model="editedItem.interests"
-              label="Interessen"
-              rows="2"
-              auto-grow
-              :readonly="editWindow.readonly"
-              :error="!!editWindow.errors.interests"
-              :error-messages="editWindow.errors.interests"
-            ></v-textarea>
+            <v-menu
+              v-model="editWindow.showNextFirstAidTrainingDatePicker"
+              :close-on-content-click="false"
+              :nudge-right="40"
+              transition="scale-transition"
+              offset-y
+              min-width="290px"
+              :disabled="editWindow.readonly"
+            >
+              <template v-slot:activator="{ on }">
+                <v-text-field
+                  v-model="editedItem.next_first_aid_training"
+                  label="Nächste 1. Hilfe Schulung"
+                  prepend-icon="event"
+                  readonly
+                  v-on="on"
+                  :error="!!editWindow.errors.next_first_aid_training"
+                  :error-messages="editWindow.errors.next_first_aid_training"
+                ></v-text-field>
+              </template>
+              <v-date-picker
+                v-model="editedItem.next_first_aid_training"
+                @input="nextTraining"
+                locale="de-de"
+                :min="today"
+              ></v-date-picker>
+            </v-menu>
             <v-menu
               v-model="editWindow.showQuestResponseDatePicker"
               :close-on-content-click="false"
@@ -243,7 +270,7 @@
               </template>
               <v-date-picker
                 v-model="editedItem.responded_to_questionaire_at"
-                @input="editWindow.showQuestResponseDatePicker = false"
+                @input="respondedToQuestionaire"
                 locale="de-de"
                 :max="today"
               ></v-date-picker>
@@ -264,6 +291,7 @@
                 label="Registriert für Erste-Hilfe-Kurs"
                 :disabled="editWindow.readonly"
                 :value-comparator="checkForTrue"
+                @change="registerFirstAid"
                 :error="!!editWindow.errors.active"
                 :error-messages="editWindow.errors.active"
               ></v-switch>
@@ -273,6 +301,7 @@
                 label="Fragebogen ausgefüllt"
                 :disabled="editWindow.readonly"
                 :value-comparator="checkForTrue"
+                @change="setResponded"
                 :error="!!editWindow.errors.active"
                 :error-messages="editWindow.errors.active"
               ></v-switch>
@@ -553,6 +582,24 @@ export default {
     isAdmin() {
       return sessionStorage.getItem("is_admin") == "true";
     },
+    nextTraining(e) {
+      this.editWindow.showNextFirstAidTrainingDatePicker = false;
+      this.editedItem.registered_for_first_aid_training = true;
+    },
+    registerFirstAid(e) {
+      if (!e) {
+        this.editedItem.next_first_aid_training = null;
+      }
+    },
+    respondedToQuestionaire(e) {
+      this.editWindow.showQuestResponseDatePicker = false;
+      this.editedItem.responded_to_questionaire = true;
+    },
+    setResponded(e) {
+      if (!e) {
+        this.editedItem.responded_to_questionaire_at = null;
+      }
+    }
   },
 };
 </script>
