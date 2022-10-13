@@ -255,7 +255,7 @@
               transition="scale-transition"
               offset-y
               min-width="290px"
-              :disabled="editWindow.readonly"
+              :disabled="noAdminOrReadOnly"
             >
               <template v-slot:activator="{ on }">
                 <v-text-field
@@ -299,7 +299,7 @@
                 class="ml-5"
                 v-model="editedItem.responded_to_questionaire"
                 label="Fragebogen ausgefüllt"
-                :disabled="editWindow.readonly"
+                :disabled="noAdminOrReadOnly" 
                 :value-comparator="checkForTrue"
                 @change="setResponded"
                 :error="!!editWindow.errors.active"
@@ -403,6 +403,9 @@ export default {
     today() {
       return new Date().toISOString().substring(0, 10);
     },
+    noAdminOrReadOnly() {
+      return !this.isAdmin() || this.editWindow.readonly;
+    }
   },
   methods: {
     closeEW() {
@@ -448,7 +451,7 @@ export default {
               "?token=" +
               sessionStorage.getItem("token")
           )
-          .then(function (response) {
+          .then(function () {
             var tmpEditedItem = me.editedItem;
             tmpEditedItem.project_teams.splice(index, 1);
 
@@ -582,7 +585,7 @@ export default {
     isAdmin() {
       return sessionStorage.getItem("is_admin") == "true";
     },
-    nextTraining(e) {
+    nextTraining() {
       this.editWindow.showNextFirstAidTrainingDatePicker = false;
       this.editedItem.registered_for_first_aid_training = true;
     },
@@ -591,7 +594,7 @@ export default {
         this.editedItem.next_first_aid_training = null;
       }
     },
-    respondedToQuestionaire(e) {
+    respondedToQuestionaire() {
       this.editWindow.showQuestResponseDatePicker = false;
       this.editedItem.responded_to_questionaire = true;
     },
@@ -599,7 +602,7 @@ export default {
       if (!e) {
         this.editedItem.responded_to_questionaire_at = null;
       }
-    }
+    },
   },
 };
 </script>

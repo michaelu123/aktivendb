@@ -111,11 +111,11 @@
           small
           class="mr-2"
           @click.stop="editItem(item)"
-          v-if="!strictReadonly"
+          v-if="!strictReadonly && item.with_details"
         >
           edit
         </v-icon>
-        <v-icon small @click.stop="deleteItem(item)" v-if="!strictReadonly">
+        <v-icon small @click.stop="deleteItem(item)" v-if="!strictReadonly && isAdmin()">
           delete
         </v-icon>
       </template>
