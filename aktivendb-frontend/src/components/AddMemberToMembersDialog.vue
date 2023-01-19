@@ -4,7 +4,7 @@
       <v-btn
         color="primary"
         outlined
-        class="mb-2"
+        class="mb-2 ml-2"
         v-on="on"
         v-if="!strictReadonly"
       >
@@ -559,7 +559,7 @@ export default {
       };
 
       try {
-        var response = await me.$http.post(
+        await me.$http.post(
           "/api/user?token=" + sessionStorage.getItem("token"),
           newUser
         );
@@ -568,7 +568,7 @@ export default {
         this.dbpasswd = "";
       } catch (error) {
         try {
-          response = await me.$http.put(
+          await me.$http.put(
             "/api/user/" +
               me.editedItem.user.id +
               "?token=" +

@@ -4,7 +4,7 @@
       <v-btn
         color="primary"
         outlined
-        class="mb-2"
+        class="mb-2 ml-2"
         v-on="on"
         v-if="!strictReadonly && isAdmin()"
       >

@@ -37,7 +37,7 @@
           @saveEW="saveEditWindow"
         ></AddMemberToMembersDialog>
         <v-spacer></v-spacer>
-        <v-row>
+        <v-row class="ml-2">
           <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
           &nbsp;&nbsp;&nbsp;
           <v-switch  v-if="!isAdmin()" v-model="agSwitch" label="Nur AG/OG-Mitglieder"> </v-switch>
@@ -104,6 +104,7 @@
           append-icon="search"
           single-line
           hide-details
+          class="ml-2"
         ></v-text-field>
       </template>
       <template v-slot:item.action="{ item }">

@@ -1,5 +1,5 @@
 // Used to import results of Serienbrief. Export from Google Sheet as Excel-file, then open with this code
-// Am 06.09.22 bis Burhenne Roman 246 importiert
+// Am 15.01.23 bis Galles 160 importiert
 
 <template>
   <v-content>
@@ -64,7 +64,7 @@ const nullMember = {
   birthday: "",
   status: "",
   registered_for_first_aid_training: 0,
-  responded_to_questionaire: 0,
+  responded_to_questionaire: 1,
   responded_to_questionaire_at: null,
   first_name: "",
   last_name: "",
@@ -96,6 +96,7 @@ const colNamesMap = {
   "Interessen": "interests",
   "ADFC-Mitgliedsnummer": "adfc_id",
   "Letztes Erste-Hilfe-Training": "latest_first_aid_training",
+  "Nächstes Erste-Hilfe-Training": "next_first_aid_training",
   "Registriert für ein Erste-Hilfe-Training?": "registered_for_first_aid_training",
   "Mit Speicherung einverstanden?": "daccord",
   "Aktives Mitglied?": "active",
@@ -164,7 +165,7 @@ export default {
       });
     },
     getMembersFromApi() {
-      console.log("MUH getMembersFromApi");
+      console.log("getMembersFromApi");
       return new Promise((resolve, reject) => {
         let items = [];
         this.$http
@@ -181,7 +182,7 @@ export default {
       });
     },
     getAllAGsFromApi() {
-      console.log("MUHP getProjectTeamsFromApi");
+      console.log("getProjectTeamsFromApi");
       return new Promise((resolve, reject) => {
         let items = [];
         this.$http
@@ -213,7 +214,7 @@ export default {
 
     async storeMembers(rows) {
       let phase = this.phases.findIndex(x => x == this.phase) + 1;
-      this.message = ""
+      this.message = "";
       if (phase < 1 || phase > 3) {
         console.log("phase invalid", this.phase);
         return;
@@ -226,7 +227,7 @@ export default {
         let x = this.members.findIndex((m) => m.first_name.trim() === vorname && m.last_name.trim() === nachname);
         if (x == -1) {
           if (row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") {
-            this.message += "Gelöscht wird: " + this.nameOf(row) + "\n"
+            this.message += "Schon gelöscht wurde: " + this.nameOf(row) + "\n";
             continue;
           }
           console.log("unknown or new", this.nameOf(row));
@@ -250,14 +251,15 @@ export default {
           member.interests
         );
         if (member.id == null) {
-          this.message += "Neu angelegt: " + this.nameOf(row) + "\n"
-          if (member.latest_first_aid_training) {
+          this.message += "Neu angelegt: " + this.nameOf(row) + "\n";
+          if (t) {
             console.log("New member:", member.name, "wants to set EHK date to", member.latest_first_aid_training);
             member.latest_first_aid_training = null;
           }
         } else {
-          this.message += "Geändert: " + this.nameOf(row) + "\n"
-          if (member.latest_first_aid_training != exi.latest_first_aid_training) {
+          this.message += "Geändert: " + this.nameOf(row) + "\n";
+          if (member.latest_first_aid_training && member.latest_first_aid_training != exi.latest_first_aid_training) {
+            this.message += "Mitglied: " + this.nameOf(row) + " möchte das EHK-Datum von " + exi.latest_first_aid_training + " auf " + member.latest_first_aid_training + " ändern\n";
             console.log("Member:", member.name, "wants to change EHK date from ", exi.latest_first_aid_training, "to", member.latest_first_aid_training);
             member.latest_first_aid_training = exi.latest_first_aid_training;
           }
@@ -272,6 +274,7 @@ export default {
           agMember.member_id = member.id;
           let ag = this.allAGs.find((ag) => ag.name === agName);
           agMember.project_team_id = ag.id;
+          this.message += "Mitglied: " + this.nameOf(row) + " möchte der " + ag.name + " beitreten\n";
           console.log("Member:", this.nameOf(row), " wants to be added to", ag.name);
           // await this.storeAGMember(agMember);  // nicht mehr, soll der AG-Leiter machen
         }
@@ -280,6 +283,7 @@ export default {
           let agName = team.name;
           if (member.project_teams.findIndex((name) => name == agName) == -1) {
             let tm = team.project_team_member;
+            this.message += "Mitglied: " + this.nameOf(row) + " tritt aus der " + agName + " aus\n";
             console.log("deleteAGMember", this.nameOf(row), "from", agName, tm.id);
             await this.deleteAGMember(tm.id);
           }
@@ -320,6 +324,7 @@ export default {
     async deleteMember(row, index) {
       var memberId = this.members[index].id;
       console.log("delete", this.nameOf(row), memberId);
+      let me = this;
       this.$http
         .delete(
           "/api/member/" +
@@ -327,11 +332,11 @@ export default {
             "?token=" +
             sessionStorage.getItem("token")
         )
-        .then(function (_) {
-          this.members.splice(index, 1);
+        .then(function () {
+          me.members.splice(index, 1);
         })
         .catch(function (error) {
-          console.log("delete failed", this.nameOf(row), error);
+          console.log("delete failed", me.nameOf(row), error);
         });
     },
 
@@ -361,7 +366,7 @@ export default {
             "?token=" +
             sessionStorage.getItem("token")
         )
-        .then(function (_response) {
+        .then(function () {
           console.log("deleteAGMember success", projectTeamMemberId);
         })
         .catch(function (error) {
@@ -372,6 +377,7 @@ export default {
     mapRow(row, exi) {
       nullMember.project_teams = []
       let member = exi == null ? { ...nullMember } : { ...exi };
+      member.responded_to_questionaire = 1;
       if (member.project_teams == null) member.project_teams = [];
 
       for (let i = 0; i < colNames.length; i++) {
@@ -405,9 +411,24 @@ export default {
         }
       }
       member["name"] = this.nameOf(row);
+      member.latest_first_aid_training = this.date2String(member.latest_first_aid_training);
+      member.next_first_aid_training = this.date2String(member.next_first_aid_training);
+      member.latest_contact = this.date2String(member.latest_contact);
       console.log("member", member);
       return member;
     },
+    date2String(t) {
+      let latestEHK = null;
+      if (t) {
+        if (typeof t == "string") {
+          latestEHK = t;
+        } else {
+          latestEHK = t.toISOString().substring(0,10);
+        }
+      }
+      return latestEHK;
+    },
   },
+
 };
 </script>

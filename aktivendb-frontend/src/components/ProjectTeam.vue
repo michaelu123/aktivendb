@@ -43,6 +43,7 @@
           append-icon="search"
           single-line
           hide-details
+          class="ml-2"
         ></v-text-field>
       </template>
       <template v-slot:item.action="{ item }">
