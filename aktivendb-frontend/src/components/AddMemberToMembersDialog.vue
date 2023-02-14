@@ -221,33 +221,45 @@
                 :max="today"
               ></v-date-picker>
             </v-menu>
-            <v-menu
-              v-model="editWindow.showNextFirstAidTrainingDatePicker"
-              :close-on-content-click="false"
-              :nudge-right="40"
-              transition="scale-transition"
-              offset-y
-              min-width="290px"
-              :disabled="editWindow.readonly"
-            >
-              <template v-slot:activator="{ on }">
-                <v-text-field
+            <v-row>
+              <v-menu
+                v-model="editWindow.showNextFirstAidTrainingDatePicker"
+                :close-on-content-click="false"
+                :nudge-right="40"
+                transition="scale-transition"
+                offset-y
+                min-width="290px"
+                :disabled="editWindow.readonly"
+              >
+                <template v-slot:activator="{ on }">
+                  <v-text-field
+                    v-model="editedItem.next_first_aid_training"
+                    label="Nächste 1. Hilfe Schulung"
+                    prepend-icon="event"
+                    readonly
+                    v-on="on"
+                    :error="!!editWindow.errors.next_first_aid_training"
+                    :error-messages="editWindow.errors.next_first_aid_training"
+                  ></v-text-field>
+                </template>
+                <v-date-picker
                   v-model="editedItem.next_first_aid_training"
-                  label="Nächste 1. Hilfe Schulung"
-                  prepend-icon="event"
-                  readonly
-                  v-on="on"
-                  :error="!!editWindow.errors.next_first_aid_training"
-                  :error-messages="editWindow.errors.next_first_aid_training"
-                ></v-text-field>
-              </template>
-              <v-date-picker
-                v-model="editedItem.next_first_aid_training"
-                @input="nextTraining"
-                locale="de-de"
-                :min="today"
-              ></v-date-picker>
-            </v-menu>
+                  @input="nextTraining"
+                  locale="de-de"
+                  :min="today"
+                ></v-date-picker>
+              </v-menu>
+              <v-btn
+                color="primary"
+                outlined
+                class="mb-2 ml-2"
+                v-on="on"
+                :disabled="editWindow.readonly"
+                @click="editedItem.next_first_aid_training=null"
+              >
+                <v-icon left>delete</v-icon> Datum löschen
+              </v-btn>
+            </v-row>
             <v-menu
               v-model="editWindow.showQuestResponseDatePicker"
               :close-on-content-click="false"
