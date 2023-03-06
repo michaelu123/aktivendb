@@ -1,5 +1,5 @@
 // Used to import results of Serienbrief. Export from Google Sheet as Excel-file, then open with this code
-// Am 15.01.23 bis Galles 160 importiert
+// Am 06.03.23 bis Gottenöf 240 importiert
 
 <template>
   <v-content>
@@ -252,7 +252,7 @@ export default {
         );
         if (member.id == null) {
           this.message += "Neu angelegt: " + this.nameOf(row) + "\n";
-          if (t) {
+          if (member.latest_first_aid_training) {
             console.log("New member:", member.name, "wants to set EHK date to", member.latest_first_aid_training);
             member.latest_first_aid_training = null;
           }
