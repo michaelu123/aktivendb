@@ -1,36 +1,31 @@
 // Used to import results of Serienbrief. Export from Google Sheet as Excel-file, then open with this code
-// Am 06.03.23 bis Gottenöf 240 importiert
+// npm run serve
+// URL http://localhost:8236/app/index.html#/importSB
+
+// Am 20.03.23 bis Witte 244 importiert
+// Am 4.4.23 Christoph Rouette 245 händisch importiert
+// Am 1.5.23 Rosa Bieger 246 händisch importiert
+// Am 23.5.23 Heitler und Frey, bis 248 importiert
+// am 30.5.23 Schröder, Jens, bis 249 importiert
+// am 14.6.23 Schulz, Cornelia händisch importiert
+// am 21.6. bis Dürholz, 253 importiert
+// am 20.7. bis Höcher 255 importiert
 
 <template>
   <v-content>
-    <v-file-input
-      label="Wähle eine Excel-Datei"
-      placeholder="Eine Excel-Datei mit den Resultaten der Aktiven-Befragung per Serienbrief"
-      accept=".xlsx"
-      v-model="excelFile"
-    >
+    <v-file-input label="Wähle eine Excel-Datei"
+      placeholder="Eine Excel-Datei mit den Resultaten der Aktiven-Befragung per Serienbrief" accept=".xlsx"
+      v-model="excelFile">
     </v-file-input>
 
-    <v-select
-      v-model="phase"
-      :items="phases"
-      item-text="Phase"
-      item-value="id"
-      label="Phase"
-      required 
-    ></v-select>
+    <v-select v-model="phase" :items="phases" item-text="Phase" item-value="id" label="Phase" required></v-select>
 
     <v-btn v-if="excelFileAndPhaseSet" @click="importFile">Import </v-btn>
 
-    <v-textarea v-if="messagesSet"
-      v-model="message"
-      label="Ergebnis"
-      rows="10"
-      no-resize
-    ></v-textarea>
+    <v-textarea v-if="messagesSet" v-model="message" label="Ergebnis" rows="10" no-resize></v-textarea>
 
 
-</v-content>
+  </v-content>
 </template>
 
 <script>
@@ -107,14 +102,14 @@ const emailRegexp = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-
 
 export default {
   data() {
-    return { 
-      excelFile: [], 
-      members: [], 
-      allAGs: [], 
+    return {
+      excelFile: [],
+      members: [],
+      allAGs: [],
       phase: "",
       phases: ["Namen überprüfen", "Widersprechende löschen", "Ändern oder Neuanlegen"],
       message: ""
-    }; 
+    };
   },
   computed: {
     excelFileAndPhaseSet() {
@@ -137,32 +132,32 @@ export default {
     async importFile() {
       console.log("excelFile", this.excelFile);
       readXlsxFile(this.excelFile)
-      .then(async (rows) => {
-        // cannot read "Zeitstempel" from xlsx file, it returns a number, that can be converted to a date, which is then off by some 13 hours.
-        // I took two timestamps, got a diff as number (0.5192341087968089), computed the number of secs between the timestamps (44862),
-        // and multiplied this by 13*60*60 sec . No idea what this is all about.
-        let rlen = rows.length;
-        console.log("len", rows.length);
-        let corr = 13.0 *60.0*60.0 * 0.5192341087968089 / 44862.0;
-        console.log("Corr", corr);
-        for (let row = 1; row < rlen; row++) {
-          let x = rows[row][0];
-          let t = parseExcelDate(x - corr);
-          let d = t.toISOString(t);
-          d = d.substring(0, 10);
-          // console.log(rows[row][1], "Z", z);
-          rows[row][0] = d;
-        }
-      
-        colNames = rows[0];
-        for (let i = 0; i < colNames.length; i++) {
-          colNamesIdx[colNames[i]] = i;
-        }
-        await this.storeMembers(rows);
-      })
-      .catch(function (error) {
-            console.log("ERROR", error);
-      });
+        .then(async (rows) => {
+          // cannot read "Zeitstempel" from xlsx file, it returns a number, that can be converted to a date, which is then off by some 13 hours.
+          // I took two timestamps, got a diff as number (0.5192341087968089), computed the number of secs between the timestamps (44862),
+          // and multiplied this by 13*60*60 sec . No idea what this is all about.
+          let rlen = rows.length;
+          console.log("len", rows.length);
+          let corr = 13.0 * 60.0 * 60.0 * 0.5192341087968089 / 44862.0;
+          console.log("Corr", corr);
+          for (let row = 1; row < rlen; row++) {
+            let x = rows[row][0];
+            let t = parseExcelDate(x - corr);
+            let d = t.toISOString(t);
+            d = d.substring(0, 10);
+            // console.log(rows[row][1], "Z", z);
+            rows[row][0] = d;
+          }
+
+          colNames = rows[0];
+          for (let i = 0; i < colNames.length; i++) {
+            colNamesIdx[colNames[i]] = i;
+          }
+          await this.storeMembers(rows);
+        })
+        .catch(function (error) {
+          console.log("ERROR", error);
+        });
     },
     getMembersFromApi() {
       console.log("getMembersFromApi");
@@ -232,7 +227,7 @@ export default {
           }
           console.log("unknown or new", this.nameOf(row));
           this.message += "Unbekannt oder neu: " + this.nameOf(row) + "\n";
-         }
+        }
         if (phase == 1) continue;  // first make sure all names in DB and Excel match
         if (phase == 2) { // delete member if storage not wanted
           if (x != -1 && row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") {
@@ -306,9 +301,9 @@ export default {
         await this.$http
           .put(
             "/api/member/" +
-              member.id +
-              "?token=" +
-              sessionStorage.getItem("token"),
+            member.id +
+            "?token=" +
+            sessionStorage.getItem("token"),
             member
           )
           .then(async function (response) {
@@ -328,9 +323,9 @@ export default {
       this.$http
         .delete(
           "/api/member/" +
-            memberId +
-            "?token=" +
-            sessionStorage.getItem("token")
+          memberId +
+          "?token=" +
+          sessionStorage.getItem("token")
         )
         .then(function () {
           me.members.splice(index, 1);
@@ -362,9 +357,9 @@ export default {
       me.$http
         .delete(
           "/api/project-team-member/" +
-            projectTeamMemberId +
-            "?token=" +
-            sessionStorage.getItem("token")
+          projectTeamMemberId +
+          "?token=" +
+          sessionStorage.getItem("token")
         )
         .then(function () {
           console.log("deleteAGMember success", projectTeamMemberId);
@@ -400,13 +395,13 @@ export default {
         } else if (dbColName.startsWith("email_")) {
           val = val.toLowerCase(val);
           let m = val.match(emailRegexp);
-          if (!m || m[0] != val) { 
-            console.log("invalid email",val);
+          if (!m || m[0] != val) {
+            console.log("invalid email", val);
             val = "";
           }
           member[dbColName] = val;
         } else {
-          if (typeof(val) == "string") val = val.trim();
+          if (typeof (val) == "string") val = val.trim();
           member[dbColName] = val;
         }
       }
@@ -423,7 +418,7 @@ export default {
         if (typeof t == "string") {
           latestEHK = t;
         } else {
-          latestEHK = t.toISOString().substring(0,10);
+          latestEHK = t.toISOString().substring(0, 10);
         }
       }
       return latestEHK;

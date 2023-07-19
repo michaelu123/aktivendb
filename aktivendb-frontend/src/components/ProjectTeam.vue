@@ -2,57 +2,43 @@
   <v-card>
     <v-card-title>
       <div>
-        <v-alert
-          :type="alert.type"
-          outlined
-          v-model="alert.shown"
-          dismissible
-          width="100%"
-        >
+        <v-alert :type="alert.type" outlined v-model="alert.shown" dismissible width="100%">
           {{ alert.text }}
         </v-alert>
       </div>
     </v-card-title>
-    <v-data-table
-      :headers="headers"
-      :items="projectTeams"
-      :search="search"
-      :loading="loading"
-      loading-text="Wird geladen..."
-      @click:row="viewItem"
-    >
+    <v-data-table :headers="headers" :items="projectTeams" :search="search" :loading="loading"
+      loading-text="Wird geladen..." @click:row="viewItem">
       <template v-slot:top>
-        <AddTeamToTeamsDialog
-          :editWindow="editWindow"
-          :editedItem="editedItem"
-          :memberRoles="memberRoles"
-          :members="members"
-          :allMembers="allMembers"
-          :strictReadonly="strictReadonly"
-          :searchEditWindow="searchEditWindow"
-          :checkForTrue="checkForTrue"
-          :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow"
-          :handleRequestError="handleRequestError"
-          @closeEW="closeEditWindow"
-          @saveEW="saveEditWindow"
-        ></AddTeamToTeamsDialog>
+        <AddTeamToTeamsDialog :editWindow="editWindow" :editedItem="editedItem" :memberRoles="memberRoles"
+          :members="members" :allMembers="allMembers" :strictReadonly="strictReadonly"
+          :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
+          :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
+          @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddTeamToTeamsDialog>
         <v-spacer></v-spacer>
-        <v-text-field
-          v-model="search"
-          label="Suchen"
-          append-icon="search"
-          single-line
-          hide-details
-          class="ml-2"
-        ></v-text-field>
+
+        <v-sheet color="grey lighten-3" align="center">
+          <v-container v-if="isAdmin()">
+            <p class="caption">Als Excel-Datei exportieren:</p>
+            <v-row class="align-baseline">
+              <v-text-field height="60" type="text" outlined color="primary" label="Bitte Dateinamen eingeben"
+                v-model="excelFileName"></v-text-field>
+              <v-spacer></v-spacer>
+              <v-progress-circular class="mr-4" v-if="loadingMembers" indeterminate color="primary"></v-progress-circular>
+              <v-spacer></v-spacer>
+              <v-btn height="60" color="primary" type="submit" outlined @click.prevent="exportExcel">
+                <v-icon left>mdi-file-excel</v-icon> Jetzt exportieren
+              </v-btn>
+              <v-spacer></v-spacer>
+            </v-row>
+          </v-container>
+        </v-sheet>
+
+        <v-text-field v-model="search" label="Suchen" append-icon="search" single-line hide-details
+          class="ml-2"></v-text-field>
       </template>
       <template v-slot:item.action="{ item }">
-        <v-icon
-          small
-          class="mr-2"
-          @click.stop="editItem(item)"
-          v-if="!strictReadonly"
-        >
+        <v-icon small class="mr-2" @click.stop="editItem(item)" v-if="!strictReadonly">
           edit
         </v-icon>
         <v-icon small @click.stop="deleteItem(item)" v-if="!strictReadonly">
@@ -60,10 +46,7 @@
         </v-icon>
       </template>
       <template v-slot:item.needs_first_aid_training="{ item }">
-        <v-simple-checkbox
-          :value="checkForTrue(item.needs_first_aid_training)"
-          disabled
-        >
+        <v-simple-checkbox :value="checkForTrue(item.needs_first_aid_training)" disabled>
         </v-simple-checkbox>
       </template>
     </v-data-table>
@@ -71,7 +54,10 @@
 </template>
 
 <script>
+import { mdiCalendarBlankMultiple } from '@mdi/js';
 import AddTeamToTeamsDialog from "./AddTeamToTeamsDialog.vue";
+import writeXlsxFile from "write-excel-file";
+
 export default {
   components: { AddTeamToTeamsDialog },
   name: "ProjectTeam",
@@ -188,6 +174,8 @@ export default {
         members: [],
       },
       memberRoles: [],
+      excelFileName: "",
+      loadingMembers: false,
     };
   },
   watch: {
@@ -341,9 +329,9 @@ export default {
       this.$http
         .get(
           "/api/project-team/" +
-            projectTeamId +
-            "?token=" +
-            sessionStorage.getItem("token")
+          projectTeamId +
+          "?token=" +
+          sessionStorage.getItem("token")
         )
         .then(function (response) {
           me.editWindow.loading = false;
@@ -379,9 +367,9 @@ export default {
         this.$http
           .delete(
             "/api/project-team/" +
-              projectTeamId +
-              "?token=" +
-              sessionStorage.getItem("token")
+            projectTeamId +
+            "?token=" +
+            sessionStorage.getItem("token")
           )
           .then(function (_) {
             me.projectTeams.splice(index, 1);
@@ -425,9 +413,9 @@ export default {
         this.$http
           .put(
             "/api/project-team/" +
-              projectTeamId +
-              "?token=" +
-              sessionStorage.getItem("token"),
+            projectTeamId +
+            "?token=" +
+            sessionStorage.getItem("token"),
             this.editedItem
           )
           .then(function (response) {
@@ -456,6 +444,92 @@ export default {
           });
       }
     },
+    isAdmin() {
+      return sessionStorage.getItem("is_admin") == "true";
+    },
+    async getTeamFromApi(id) {
+      let response = await this.$http.get(
+        "/api/project-team/" + id + "?token=" + sessionStorage.getItem("token")
+      );
+      let team = response.data;
+      return team;
+    },
+    async exportExcel() {
+      var me = this;
+      if (me.excelFileName == "") {
+        me.showAlert("error", "Bitte Dateinamen eingeben");
+        return;
+      }
+      if (!me.excelFileName.endsWith(".xlsx")) {
+        me.excelFileName = me.excelFileName + ".xlsx";
+      }
+      let teams = me.projectTeams;
+
+
+      try {
+        this.loadingMembers = true;
+        for (let t of teams) {
+          let t2 = await this.getTeamFromApi(t.id);
+          t.leaders = t2.members
+            .filter((m) => m.project_team_member.member_role_title == "Vorsitz")
+            .map((m) => m.first_name + " " + m.last_name).join(", ");
+          console.log("leaders", t.name, t.leaders);
+        }
+      } finally {
+        this.loadingMembers = false;
+      }
+
+      const schema = this.makeSchema();
+
+      await writeXlsxFile(teams, {
+        schema,
+        fileName: me.excelFileName,
+      });
+      me.excelFileName = "";
+    },
+
+
+    makeSchema() {
+      return [
+        {
+          column: "Name",
+          type: String,
+          value: (team) => team.name,
+          width: 30,
+        },
+        {
+          column: "Email",
+          type: String,
+          value: (team) => team.email,
+          width: 60,
+        },
+        {
+          column: "EHK benötigt",
+          type: Boolean,
+          value: (team) => team.needs_first_aid_training == "1",
+          width: 15,
+        },
+        {
+          column: "Beschreibung",
+          type: String,
+          value: (team) => team.description,
+          width: 60,
+        },
+        {
+          column: "Kommentar",
+          type: String,
+          value: (team) => team.comments,
+          width: 60,
+        },
+        {
+          column: "Leiter*innen",
+          type: String,
+          value: (team) => team.leaders,
+          width: 60,
+        },
+      ];
+    }
+
   },
 };
 </script>
