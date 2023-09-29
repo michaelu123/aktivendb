@@ -37,7 +37,8 @@ import readXlsxFile, { parseExcelDate } from "read-excel-file";
 
 // Phase 1: check that names in DB and Excel file match
 // Phase 2: delete members that don't want to be stored
-// Phase 3: update members and their AGs
+// Phase 3: log what would be changed but don't change DB
+// Phase 4: update members and their AGs
 
 const nullMember = {
   id: null,
@@ -107,7 +108,7 @@ export default {
       members: [],
       allAGs: [],
       phase: "",
-      phases: ["Namen überprüfen", "Widersprechende löschen", "Ändern oder Neuanlegen"],
+      phases: ["Namen überprüfen", "Widersprechende löschen", "Testlauf", "Ändern oder Neuanlegen"],
       message: ""
     };
   },
@@ -210,7 +211,7 @@ export default {
     async storeMembers(rows) {
       let phase = this.phases.findIndex(x => x == this.phase) + 1;
       this.message = "";
-      if (phase < 1 || phase > 3) {
+      if (phase < 1 || phase > 4) {
         console.log("phase invalid", this.phase);
         return;
       }
@@ -238,28 +239,9 @@ export default {
         }
         let exi = x == -1 ? null : this.members[x];
         let member = this.mapRow(row, exi);
-        console.log(
-          "Member:",
-          member.name,
-          member.id,
-          member.project_teams,
-          member.interests
-        );
-        if (member.id == null) {
-          this.message += "Neu angelegt: " + this.nameOf(row) + "\n";
-          if (member.latest_first_aid_training) {
-            console.log("New member:", member.name, "wants to set EHK date to", member.latest_first_aid_training);
-            member.latest_first_aid_training = null;
-          }
-        } else {
-          this.message += "Geändert: " + this.nameOf(row) + "\n";
-          if (member.latest_first_aid_training && member.latest_first_aid_training != exi.latest_first_aid_training) {
-            this.message += "Mitglied: " + this.nameOf(row) + " möchte das EHK-Datum von " + exi.latest_first_aid_training + " auf " + member.latest_first_aid_training + " ändern\n";
-            console.log("Member:", member.name, "wants to change EHK date from ", exi.latest_first_aid_training, "to", member.latest_first_aid_training);
-            member.latest_first_aid_training = exi.latest_first_aid_training;
-          }
+        if (member.changed && phase == 4) {
+          await this.storeMember(member);
         }
-        await this.storeMember(member);
         // now we get the member again, but this time with project_teams
         let exiMember = await this.getMemberFromApi(member.id);
         let exiAGs = exiMember.project_teams;
@@ -270,7 +252,7 @@ export default {
           let ag = this.allAGs.find((ag) => ag.name === agName);
           agMember.project_team_id = ag.id;
           this.message += "Mitglied: " + this.nameOf(row) + " möchte der " + ag.name + " beitreten\n";
-          console.log("Member:", this.nameOf(row), " wants to be added to", ag.name);
+          console.log(this.nameOf(row), "wants to be added to", ag.name);
           // await this.storeAGMember(agMember);  // nicht mehr, soll der AG-Leiter machen
         }
 
@@ -279,8 +261,10 @@ export default {
           if (member.project_teams.findIndex((name) => name == agName) == -1) {
             let tm = team.project_team_member;
             this.message += "Mitglied: " + this.nameOf(row) + " tritt aus der " + agName + " aus\n";
-            console.log("deleteAGMember", this.nameOf(row), "from", agName, tm.id);
-            await this.deleteAGMember(tm.id);
+            if (phase == 4) {
+              await this.deleteAGMember(tm.id);
+              console.log(this.nameOf(row), "was deleted from", agName);
+            }
           }
         }
       }
@@ -372,6 +356,7 @@ export default {
     mapRow(row, exi) {
       nullMember.project_teams = []
       let member = exi == null ? { ...nullMember } : { ...exi };
+      let savedMember = { ...member };
       member.responded_to_questionaire = 1;
       if (member.project_teams == null) member.project_teams = [];
 
@@ -409,9 +394,10 @@ export default {
       member.latest_first_aid_training = this.date2String(member.latest_first_aid_training);
       member.next_first_aid_training = this.date2String(member.next_first_aid_training);
       member.latest_contact = this.date2String(member.latest_contact);
-      console.log("member", member);
+      member.changed = this.logDiffs(member, savedMember, exi) != null;
       return member;
     },
+
     date2String(t) {
       let latestEHK = null;
       if (t) {
@@ -423,6 +409,40 @@ export default {
       }
       return latestEHK;
     },
+
+    logDiffs(member, prev, exi) {
+      let msg = "";
+      if (member.email_adfc != prev.email_adfc) msg += "email_adfc:" + prev.email_adfc + "=>" + member.email_adfc + " ";
+      if (member.email_private != prev.email_private) msg += "email_private:" + prev.email_private + "=>" + member.email_private + " ";
+      if (member.phone_primary != prev.phone_primary) msg += "phone_primary:" + prev.phone_primary + "=>" + member.phone_primary + " ";
+      if (member.phone_secondary != prev.phone_secondary) msg += "phone_secondary:" + prev.phone_secondary + "=>" + member.phone_secondary + " ";
+      if (member.address != prev.address) msg += "address:" + prev.address + "=>" + member.address + " ";
+      if (member.gender != prev.gender) msg += "gender:" + prev.gender + "=>" + member.gender + " ";
+      if (member.birthday != prev.birthday) msg += "birthday:" + prev.birthday + "=>" + member.birthday + " ";
+      if (member.interests != prev.interests) msg += "interests:" + prev.interests + "=>" + member.interests + " ";
+      if (member.adfc_id != prev.adfc_id) msg += "adfc_id:" + prev.adfc_id + "=>" + member.adfc_id + " ";
+      if (member.active != prev.active) msg += "active:" + prev.active + "=>" + member.active + " ";
+
+      console.log(msg);
+      if (exi == null) {
+        if (member.latest_first_aid_training) {
+          console.log("New member", member.name, "wants as EHK-Date", member.latest_first_aid_training);
+          this.message += "Neues Mitglied möchte als EHK-Datum " + member.latest_first_aid_training + "\n";
+          member.latest_first_aid_training = null;
+        }
+      } else {
+        if (member.latest_first_aid_training && member.latest_first_aid_training != exi.latest_first_aid_training) {
+          this.message += "Mitglied: " + member.name + " möchte das EHK-Datum von " + exi.latest_first_aid_training + " auf " + member.latest_first_aid_training + " ändern\n";
+          console.log("Member:", member.name, "wants to change EHK date from ", exi.latest_first_aid_training, "to", member.latest_first_aid_training);
+          member.latest_first_aid_training = exi.latest_first_aid_training;
+        }
+      }
+      if (msg == "") return null;
+      msg = exi == null ? "New " : "Existing " + "Member:" + member.name + ": " + msg;
+
+      this.message += msg + "\n";
+      return msg;
+    }
   },
 
 };
