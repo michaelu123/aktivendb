@@ -10,39 +10,40 @@ import Import2 from "@/views/Import2.vue";
 import Import3 from "@/views/Import3.vue";
 */
 // import ImportSB from "@/views/ImportSB.vue";
-Vue.use(Router)
+import History from "@/views/History.vue";
+Vue.use(Router);
 
 export default new Router({
-  base: process.env.BASE_URL ,
+  base: process.env.BASE_URL,
   routes: [
     {
-      name: 'home',
-      path: '/',
-      component: Home
+      name: "home",
+      path: "/",
+      component: Home,
     },
     {
-      name: 'login',
-      path: '/login',
-      component: Login
+      name: "login",
+      path: "/login",
+      component: Login,
     },
     {
-      name: 'logout',
-      path: '/logout',
-      component: Login
+      name: "logout",
+      path: "/logout",
+      component: Login,
     },
     {
-      name: 'members',
-      path: '/members/:id?/:user?',
+      name: "members",
+      path: "/members/:id?/:user?",
       component: Member,
-      props: true
+      props: true,
     },
     {
-      name: 'project_teams',
-      path: '/project_teams/:id?',
+      name: "project_teams",
+      path: "/project_teams/:id?",
       component: ProjectTeam,
       props: true,
     },
-/*
+    /*
     {
       name: "importSB",
       path: "/importSB",
@@ -76,7 +77,7 @@ export default new Router({
       props: true
     }
 */
-/*  {
+    /*  {
       path: '/',
       name: 'home',
       component: Home
@@ -91,5 +92,10 @@ export default new Router({
       component: About
     }
 */
+    {
+      name: "history",
+      path: "/history",
+      component: History,
+    },
   ],
 });

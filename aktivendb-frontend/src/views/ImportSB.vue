@@ -10,6 +10,7 @@
 // am 14.6.23 Schulz, Cornelia händisch importiert
 // am 21.6. bis Dürholz, 253 importiert
 // am 20.7. bis Höcher 255 importiert
+// am 29.9.23 bis Kloppmann 256 importiert (mit Testlauf)
 
 <template>
   <v-content>
