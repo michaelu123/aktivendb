@@ -1,9 +1,17 @@
 <template>
-    <v-content>
+    <v-container>
+        <v-layout row justify-start>
+            <v-date-picker v-model="begin"></v-date-picker>
+            <v-date-picker v-model="end"></v-date-picker>
+        </v-layout>
+        <v-layout row justify-start>
+            <v-btn>Print History</v-btn>
+            <v-btn>Load History</v-btn>
+        </v-layout>
         <div v-for="line in historyTxt">
             <p>{{ line }}</p>
         </div>
-    </v-content>
+    </v-container>
 </template>
 
 <script>
@@ -79,6 +87,8 @@ export default {
             },
             historyTxt: [],
             users: {},
+            begin: null,
+            end: null,
         };
     },
 
