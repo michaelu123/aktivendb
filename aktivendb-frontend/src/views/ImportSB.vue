@@ -11,6 +11,8 @@
 // am 21.6. bis Dürholz, 253 importiert
 // am 20.7. bis Höcher 255 importiert
 // am 29.9.23 bis Kloppmann 256 importiert (mit Testlauf)
+// am 02.01.24 responded_to_questionaire=0, importiere bis Sacchi 163
+// am 08.01.24 bis Krahmer 219 importiert
 
 <template>
   <v-content>
@@ -98,6 +100,7 @@ const colNamesMap = {
   "Mit Speicherung einverstanden?": "daccord",
   "Aktives Mitglied?": "active",
   "Zeitstempel": "responded_to_questionaire_at",
+  "Status": "status",
 };
 
 const emailRegexp = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
@@ -110,7 +113,8 @@ export default {
       allAGs: [],
       phase: "",
       phases: ["Namen überprüfen", "Widersprechende löschen", "Testlauf", "Ändern oder Neuanlegen"],
-      message: ""
+      message: "",
+      entryMap: {}
     };
   },
   computed: {
@@ -221,6 +225,7 @@ export default {
         const row = rows[rowx];
         const vorname = row[colNamesIdx["Vorname"]].trim();
         const nachname = row[colNamesIdx["Nachname"]].trim();
+        if (phase == 1) this.setEntryMap(row);
         let x = this.members.findIndex((m) => m.first_name.trim() === vorname && m.last_name.trim() === nachname);
         if (x == -1) {
           if (row[colNamesIdx["Mit Speicherung einverstanden?"]] == "Nein") {
@@ -243,6 +248,7 @@ export default {
         if (member.changed && phase == 4) {
           await this.storeMember(member);
         }
+        if (member.id == null) continue; // happens if phase < 4
         // now we get the member again, but this time with project_teams
         let exiMember = await this.getMemberFromApi(member.id);
         let exiAGs = exiMember.project_teams;
@@ -413,7 +419,14 @@ export default {
 
     logDiffs(member, prev, exi) {
       let msg = "";
-      if (member.email_adfc != prev.email_adfc) msg += "email_adfc:" + prev.email_adfc + "=>" + member.email_adfc + " ";
+      if (member.email_adfc != prev.email_adfc) {
+        if ((member.email_adfc == "" || member.email_adfc == "undef@undef.de") &&
+          prev.email_adfc != "" && prev.email_adfc != "undef@undef.de") {
+          member.email_adfc = prev.email_adfc;
+        } else {
+          msg += "email_adfc:" + prev.email_adfc + "=>" + member.email_adfc + " ";
+        }
+      }
       if (member.email_private != prev.email_private) msg += "email_private:" + prev.email_private + "=>" + member.email_private + " ";
       if (member.phone_primary != prev.phone_primary) msg += "phone_primary:" + prev.phone_primary + "=>" + member.phone_primary + " ";
       if (member.phone_secondary != prev.phone_secondary) msg += "phone_secondary:" + prev.phone_secondary + "=>" + member.phone_secondary + " ";
@@ -423,6 +436,7 @@ export default {
       if (member.interests != prev.interests) msg += "interests:" + prev.interests + "=>" + member.interests + " ";
       if (member.adfc_id != prev.adfc_id) msg += "adfc_id:" + prev.adfc_id + "=>" + member.adfc_id + " ";
       if (member.active != prev.active) msg += "active:" + prev.active + "=>" + member.active + " ";
+      if (member.status != prev.status) msg += "status:" + prev.status + "=>" + member.status + " ";
 
       console.log(msg);
       if (exi == null) {
@@ -443,8 +457,24 @@ export default {
 
       this.message += msg + "\n";
       return msg;
+    },
+    setEntryMap(row) {
+      let name = this.nameOf(row)
+      let prev = this.entryMap[name]
+      this.entryMap[name] = row
+      if (prev != null) {
+        this.message += "Another entry for " + name + "\n"
+        for (let i = 0; i < colNames.length; i++) {
+          if (colNames[i] == "Letztes Erste-Hilfe-Training") {
+            prev[i] = this.date2String(prev[i])
+            row[i] = this.date2String(row[i])
+          }
+          if (prev[i] != row[i]) {
+            this.message += "\t" + colNames[i] + ": " + prev[i] + " => " + row[i] + "\n"
+          }
+        }
+      }
     }
-  },
-
+  }
 };
 </script>

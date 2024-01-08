@@ -2,70 +2,36 @@
   <v-card>
     <v-card-title>
       <div>
-        <v-alert
-          :type="alert.type"
-          outlined
-          v-model="alert.shown"
-          dismissible
-          width="100%"
-        >
+        <v-alert :type="alert.type" outlined v-model="alert.shown" dismissible width="100%">
           {{ alert.text }}
         </v-alert>
       </div>
     </v-card-title>
-    <v-data-table
-      :headers="headers"
-      :items="members"
-      :search="search"
-      :loading="loading"
-      loading-text="Wird geladen..."
-      @click:row="viewItem"
-    >
+    <v-data-table :headers="headers" :items="members" :search="search" :loading="loading" loading-text="Wird geladen..."
+      @click:row="viewItem">
       <template v-slot:top>
-        <AddMemberToMembersDialog
-          :editWindow="editWindow"
-          :editedItem="editedItem"
-          :memberRoles="memberRoles"
-          :projectTeams="projectTeams"
-          :allProjectTeams="allProjectTeams"
-          :strictReadonly="strictReadonly"
-          :searchEditWindow="searchEditWindow"
-          :checkForTrue="checkForTrue"
-          :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow"
-          :handleRequestError="handleRequestError"
-          @closeEW="closeEditWindow"
-          @saveEW="saveEditWindow"
-        ></AddMemberToMembersDialog>
+        <AddMemberToMembersDialog :editWindow="editWindow" :editedItem="editedItem" :memberRoles="memberRoles"
+          :projectTeams="projectTeams" :allProjectTeams="allProjectTeams" :strictReadonly="strictReadonly"
+          :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
+          :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
+          @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddMemberToMembersDialog>
         <v-spacer></v-spacer>
         <v-row class="ml-2">
           <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
           &nbsp;&nbsp;&nbsp;
-          <v-switch  v-if="!isAdmin()" v-model="agSwitch" label="Nur AG/OG-Mitglieder"> </v-switch>
+          <v-switch v-if="!isAdmin()" v-model="agSwitch" label="Nur AG/OG-Mitglieder"> </v-switch>
         </v-row>
         <v-spacer></v-spacer>
 
         <v-sheet color="grey lighten-3" align="center">
-          <v-container v-if="isAdmin()">
+          <v-container>
             <p class="caption">Als Excel-Datei exportieren:</p>
             <v-row class="align-baseline">
-              <v-text-field
-                height="60"
-                type="text"
-                outlined
-                color="primary"
-                label="Bitte Dateinamen eingeben"
-                v-model="excelFileName"
-              ></v-text-field>
+              <v-text-field height="60" type="text" outlined color="primary" label="Bitte Dateinamen eingeben"
+                v-model="excelFileName"></v-text-field>
               <v-menu offset_y>
                 <template v-slot:activator="{ on: activationEvents }">
-                  <v-btn
-                    outlined
-                    color="primary"
-                    height="60"
-                    text
-                    class="mx-4"
-                    v-on="activationEvents"
-                  >
+                  <v-btn outlined color="primary" height="60" text class="mx-4" v-on="activationEvents">
                     {{ preferredEmail }}
                   </v-btn>
                 </template>
@@ -78,19 +44,8 @@
                   </v-list-item>
                 </v-list>
               </v-menu>
-              <v-progress-circular
-                class="mr-4"
-                v-if="loadingTeams"
-                indeterminate
-                color="primary"
-              ></v-progress-circular>
-              <v-btn
-                height="60"
-                color="primary"
-                type="submit"
-                outlined
-                @click.prevent="exportExcel"
-              >
+              <v-progress-circular class="mr-4" v-if="loadingTeams" indeterminate color="primary"></v-progress-circular>
+              <v-btn height="60" color="primary" type="submit" outlined @click.prevent="exportExcel">
                 <v-icon left>mdi-file-excel</v-icon> Jetzt exportieren
               </v-btn>
               <v-spacer></v-spacer>
@@ -98,22 +53,11 @@
           </v-container>
         </v-sheet>
 
-        <v-text-field
-          v-model="search"
-          label="Suchen"
-          append-icon="search"
-          single-line
-          hide-details
-          class="ml-2"
-        ></v-text-field>
+        <v-text-field v-model="search" label="Suchen" append-icon="search" single-line hide-details
+          class="ml-2"></v-text-field>
       </template>
       <template v-slot:item.action="{ item }">
-        <v-icon
-          small
-          class="mr-2"
-          @click.stop="editItem(item)"
-          v-if="!strictReadonly && item.with_details"
-        >
+        <v-icon small class="mr-2" @click.stop="editItem(item)" v-if="!strictReadonly && item.with_details">
           edit
         </v-icon>
         <v-icon small @click.stop="deleteItem(item)" v-if="!strictReadonly && isAdmin()">
@@ -133,40 +77,24 @@
         </v-avatar>
       </template>
       <template v-slot:item.registered_for_first_aid_training="{ item }">
-        <v-avatar
-          color="green"
-          size="24"
-          v-if="checkForTrue(item.registered_for_first_aid_training)"
-        >
+        <v-avatar color="green" size="24" v-if="checkForTrue(item.registered_for_first_aid_training)">
           <v-icon small dense class="white--text">
             mdi-checkbox-marked-circle-outline
           </v-icon>
         </v-avatar>
-        <v-avatar
-          color="red"
-          size="24"
-          v-if="!checkForTrue(item.registered_for_first_aid_training)"
-        >
+        <v-avatar color="red" size="24" v-if="!checkForTrue(item.registered_for_first_aid_training)">
           <v-icon small dense class="white--text">
             mdi-checkbox-blank-circle-outline
           </v-icon>
         </v-avatar>
       </template>
       <template v-slot:item.responded_to_questionaire="{ item }">
-        <v-avatar
-          color="green"
-          size="24"
-          v-if="checkForTrue(item.responded_to_questionaire)"
-        >
+        <v-avatar color="green" size="24" v-if="checkForTrue(item.responded_to_questionaire)">
           <v-icon small dense class="white--text">
             mdi-checkbox-marked-circle-outline
           </v-icon>
         </v-avatar>
-        <v-avatar
-          color="red"
-          size="24"
-          v-if="!checkForTrue(item.responded_to_questionaire)"
-        >
+        <v-avatar color="red" size="24" v-if="!checkForTrue(item.responded_to_questionaire)">
           <v-icon small dense class="white--text">
             mdi-checkbox-blank-circle-outline
           </v-icon>
@@ -270,7 +198,7 @@ export default {
           filter: (value, _se, item) => {
             // could not get v-data-table.custom-filter to work
             if (this.agSwitch && !item.with_details) return false;
-            
+
             if (!this.activeSwitch) return true;
 
             return this.checkForTrue(value);
@@ -488,7 +416,7 @@ export default {
               if (member.email_adfc == "undef@undef.de") member.email_adfc = "";
               if (member.email_private == "undef@undef.de") member.email_private = "";
             }
-            
+
             resolve({ items });
           })
           .catch(function (error) {
@@ -551,9 +479,9 @@ export default {
       this.$http
         .get(
           "/api/member/" +
-            memberId +
-            "?token=" +
-            sessionStorage.getItem("token")
+          memberId +
+          "?token=" +
+          sessionStorage.getItem("token")
         )
         .then(function (response) {
           me.editWindow.loading = false;
@@ -600,9 +528,9 @@ export default {
         this.$http
           .delete(
             "/api/member/" +
-              memberId +
-              "?token=" +
-              sessionStorage.getItem("token")
+            memberId +
+            "?token=" +
+            sessionStorage.getItem("token")
           )
           .then(function () {
             me.members.splice(index, 1);
@@ -650,9 +578,9 @@ export default {
         this.$http
           .put(
             "/api/member/" +
-              memberId +
-              "?token=" +
-              sessionStorage.getItem("token"),
+            memberId +
+            "?token=" +
+            sessionStorage.getItem("token"),
             this.editedItem
           )
           .then(function (response) {
@@ -707,25 +635,28 @@ export default {
         return;
       }
 
+      let myMembers = [];
       try {
         this.loadingTeams = true;
         for (let m of me.members) {
+          if (!m.with_details)
+            continue;
           let m2 = await this.getMemberFromApi(m.id);
           m.ags = m2.project_teams.map((t) => t.name).join(",");
           console.log("ags", m.name, m.ags);
+          myMembers.push(m);
         }
       } finally {
         this.loadingTeams = false;
       }
       const schema = makeSchema(me);
 
-      let members = me.members;
       if (this.activeSwitch) {
-        members = members.filter(m => m.active == "1")
+        myMembers = myMembers.filter(m => m.active == "1")
       }
 
 
-      await writeXlsxFile(members, {
+      await writeXlsxFile(myMembers, {
         schema,
         fileName: me.excelFileName,
       });
