@@ -1,60 +1,32 @@
 <template>
   <v-dialog v-model="editWindow.shown">
     <template v-slot:activator="{ on }">
-      <v-btn
-        color="primary"
-        outlined
-        class="mb-2 ml-2"
-        v-on="on"
-        v-if="!strictReadonly && isAdmin()"
-      >
+      <v-btn color="primary" outlined class="mb-2 ml-2" v-on="on" v-if="!strictReadonly && isAdmin()">
         <v-icon left>add</v-icon> AG Hinzufügen
       </v-btn>
     </template>
     <v-card>
       <v-card-title>
         <span class="headline">AG</span>
-        <v-alert
-          :type="alert.type"
-          outlined
-          v-model="alert.shown"
-          dismissible
-          width="100%"
-        >
+        <v-alert :type="alert.type" outlined v-model="alert.shown" dismissible width="100%">
           {{ alert.text }}
         </v-alert>
       </v-card-title>
 
       <v-card-text v-if="editWindow.loading">
         Wird geladen...
-        <v-progress-circular
-          indeterminate
-          color="primary"
-        ></v-progress-circular>
+        <v-progress-circular indeterminate color="primary"></v-progress-circular>
       </v-card-text>
 
       <v-sheet color="grey lighten-3" align="center">
         <v-container>
           <p class="caption">Als Excel-Datei exportieren:</p>
           <v-row class="align-baseline">
-            <v-text-field
-              height="60"
-              type="text"
-              outlined
-              color="primary"
-              label="Bitte Dateinamen eingeben"
-              v-model="excelFileName"
-            ></v-text-field>
+            <v-text-field height="60" type="text" outlined color="primary" label="Bitte Dateinamen eingeben"
+              v-model="excelFileName"></v-text-field>
             <v-menu offset_y>
               <template v-slot:activator="{ on: activationEvents }">
-                <v-btn
-                  outlined
-                  color="primary"
-                  height="60"
-                  text
-                  class="mx-4"
-                  v-on="activationEvents"
-                >
+                <v-btn outlined color="primary" height="60" text class="mx-4" v-on="activationEvents">
                   {{ preferredEmail }}
                 </v-btn>
               </template>
@@ -67,13 +39,7 @@
                 </v-list-item>
               </v-list>
             </v-menu>
-            <v-btn
-              height="60"
-              color="primary"
-              type="submit"
-              outlined
-              @click.prevent="exportExcel"
-            >
+            <v-btn height="60" color="primary" type="submit" outlined @click.prevent="exportExcel">
               <v-icon left>mdi-file-excel</v-icon> Jetzt exportieren
             </v-btn>
             <v-spacer></v-spacer>
@@ -84,90 +50,38 @@
       <v-card-text v-if="!editWindow.loading">
         <v-container>
           <v-form ref="form" v-model="editWindow.formValid" lazy-validation>
-            <v-text-field
-              v-model="editedItem.name"
-              label="Name"
-              required
-              :readonly="editWindow.readonly"
-              :error="!!editWindow.errors.name"
-              :error-messages="editWindow.errors.name"
-            ></v-text-field>
-            <v-text-field
-              v-model="editedItem.email"
-              label="E-mail"
-              :readonly="editWindow.readonly"
-              :error="!!editWindow.errors.email"
-              :error-messages="editWindow.errors.email"
-            ></v-text-field>
-            <v-textarea
-              v-model="editedItem.description"
-              label="Beschreibung"
-              rows="2"
-              auto-grow
-              :readonly="editWindow.readonly"
-              :error="!!editWindow.errors.description"
-              :error-messages="editWindow.errors.description"
-            ></v-textarea>
-            <v-textarea
-              v-model="editedItem.comments"
-              label="Kommentar"
-              rows="2"
-              auto-grow
-              :readonly="editWindow.readonly"
-              :error="!!editWindow.errors.comments"
-              :error-messages="editWindow.errors.comments"
-            ></v-textarea>
-            <v-switch
-              v-model="editedItem.needs_first_aid_training"
-              label="1. Hilfe Schulung"
-              :disabled="editWindow.readonly"
-              :value-comparator="checkForTrue"
+            <v-text-field v-model="editedItem.name" label="Name" required :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.name" :error-messages="editWindow.errors.name"></v-text-field>
+            <v-text-field v-model="editedItem.email" label="E-mail" :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.email" :error-messages="editWindow.errors.email"></v-text-field>
+            <v-textarea v-model="editedItem.description" label="Beschreibung" rows="2" auto-grow
+              :readonly="editWindow.readonly" :error="!!editWindow.errors.description"
+              :error-messages="editWindow.errors.description"></v-textarea>
+            <v-textarea v-model="editedItem.comments" label="Kommentar" rows="2" auto-grow :readonly="editWindow.readonly"
+              :error="!!editWindow.errors.comments" :error-messages="editWindow.errors.comments"></v-textarea>
+            <v-switch v-model="editedItem.needs_first_aid_training" label="1. Hilfe Schulung"
+              :disabled="editWindow.readonly" :value-comparator="checkForTrue"
               :error="!!editWindow.errors.needs_first_aid_training"
-              :error-messages="editWindow.errors.needs_first_aid_training"
-            ></v-switch>
+              :error-messages="editWindow.errors.needs_first_aid_training"></v-switch>
           </v-form>
 
           <template v-if="editedItem.id > 0">
-            <v-data-table
-              :headers="editWindow.memberList.headers"
-              :items="members"
-              :search="searchEditWindow"
-              @click:row="viewProjectTeamMemberItem"
-            >
+            <v-data-table :headers="editWindow.memberList.headers" :items="members" :search="searchEditWindow"
+              @click:row="viewProjectTeamMemberItem">
               <template v-slot:top>
-                <AddMemberToTeamDialog
-                  :editWindow="editWindow"
-                  :editedItem="editedItem"
-                  :memberRoles="memberRoles"
-                  :allMembers="allMembers"
-                  :strictReadonly="strictReadonly"
-                  @saveTM="saveEditProjectTeamMemberWindow"
-                  @closeTM="closeEditProjectTeamMemberWindow"
-                ></AddMemberToTeamDialog>
+                <AddMemberToTeamDialog :editWindow="editWindow" :editedItem="editedItem" :memberRoles="memberRoles"
+                  :allMembers="allMembers" :strictReadonly="strictReadonly" @saveTM="saveEditProjectTeamMemberWindow"
+                  @closeTM="closeEditProjectTeamMemberWindow"></AddMemberToTeamDialog>
 
                 <v-spacer></v-spacer>
-                <v-text-field
-                  v-model="searchEditWindow"
-                  label="Suchen"
-                  append-icon="search"
-                  single-line
-                  hide-details
-                ></v-text-field>
+                <v-text-field v-model="searchEditWindow" label="Suchen" append-icon="search" single-line
+                  hide-details></v-text-field>
               </template>
               <template v-slot:item.action="{ item }">
-                <v-icon
-                  small
-                  class="mr-2"
-                  @click.stop="editProjectTeamMemberItem(item)"
-                  v-if="!strictReadonly"
-                >
+                <v-icon small class="mr-2" @click.stop="editProjectTeamMemberItem(item)" v-if="!strictReadonly">
                   edit
                 </v-icon>
-                <v-icon
-                  small
-                  @click.stop="deleteProjectTeamMemberItem(item)"
-                  v-if="!strictReadonly"
-                >
+                <v-icon small @click.stop="deleteProjectTeamMemberItem(item)" v-if="!strictReadonly">
                   delete
                 </v-icon>
               </template>
@@ -179,13 +93,7 @@
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn text @click="closeEW">Abbrechen</v-btn>
-        <v-btn
-          text
-          @click="saveEW"
-          :loading="editWindow.saveInProgress"
-          v-if="!editWindow.readonly"
-          >Speichern</v-btn
-        >
+        <v-btn text @click="saveEW" :loading="editWindow.saveInProgress" v-if="!editWindow.readonly">Speichern</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -240,9 +148,9 @@ export default {
         me.$http
           .put(
             "/api/project-team-member/" +
-              projectTeamMemberId +
-              "?token=" +
-              sessionStorage.getItem("token"),
+            projectTeamMemberId +
+            "?token=" +
+            sessionStorage.getItem("token"),
             me.editWindow.memberList.editedProjectTeamMember.project_team_member
           )
           .then(function (response) {
@@ -316,9 +224,9 @@ export default {
         me.$http
           .delete(
             "/api/project-team-member/" +
-              projectTeamMember +
-              "?token=" +
-              sessionStorage.getItem("token")
+            projectTeamMember +
+            "?token=" +
+            sessionStorage.getItem("token")
           )
           .then(function () {
             var tmpEditedItem = me.editedItem;
@@ -360,12 +268,12 @@ export default {
         return;
       }
 
-      const schema = makeSchema(me);
-
       let members = me.members;
       if (this.activeSwitch) {
         members = members.filter(m => m.active == "1")
       }
+      const schema = makeSchema(me, null);
+
 
       await writeXlsxFile(members, {
         schema,

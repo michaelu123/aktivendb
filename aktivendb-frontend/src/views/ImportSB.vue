@@ -427,7 +427,14 @@ export default {
           msg += "email_adfc:" + prev.email_adfc + "=>" + member.email_adfc + " ";
         }
       }
-      if (member.email_private != prev.email_private) msg += "email_private:" + prev.email_private + "=>" + member.email_private + " ";
+      if (member.email_private != prev.email_private) {
+        if ((member.email_private == "" || member.email_private == "undef@undef.de") &&
+          (prev.email_private == "" || prev.email_private == "undef@undef.de")) {
+          member.email_private = prev.email_private;
+        } else {
+          msg += "email_private:" + prev.email_private + "=>" + member.email_private + " ";
+        }
+      }
       if (member.phone_primary != prev.phone_primary) msg += "phone_primary:" + prev.phone_primary + "=>" + member.phone_primary + " ";
       if (member.phone_secondary != prev.phone_secondary) msg += "phone_secondary:" + prev.phone_secondary + "=>" + member.phone_secondary + " ";
       if (member.address != prev.address) msg += "address:" + prev.address + "=>" + member.address + " ";
@@ -437,6 +444,9 @@ export default {
       if (member.adfc_id != prev.adfc_id) msg += "adfc_id:" + prev.adfc_id + "=>" + member.adfc_id + " ";
       if (member.active != prev.active) msg += "active:" + prev.active + "=>" + member.active + " ";
       if (member.status != prev.status) msg += "status:" + prev.status + "=>" + member.status + " ";
+      if (member.responded_to_questionaire != prev.responded_to_questionaire) msg += "responded_to_questionaire:" + prev.responded_to_questionaire + "=>" + member.responded_to_questionaire + " ";
+      if (member.responded_to_questionaire_at != prev.responded_to_questionaire_at) msg += "responded_to_questionaire_at:" + prev.responded_to_questionaire_at + "=>" + member.responded_to_questionaire_at + " ";
+
 
       console.log(msg);
       if (exi == null) {
@@ -453,7 +463,7 @@ export default {
         }
       }
       if (msg == "") return null;
-      msg = exi == null ? "New " : "Existing " + "Member:" + member.name + ": " + msg;
+      msg = (exi == null ? "New" : "Existing") + " Member:" + member.name + ": " + msg;
 
       this.message += msg + "\n";
       return msg;

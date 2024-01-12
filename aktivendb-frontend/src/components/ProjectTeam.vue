@@ -16,6 +16,8 @@
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddTeamToTeamsDialog>
         <v-spacer></v-spacer>
+        <v-switch class="ml-2" v-model="activeSwitch" label="Nur Aktive"> </v-switch>
+        <v-spacer></v-spacer>
 
         <v-sheet color="grey lighten-3" align="center">
           <v-container v-if="isAdmin()">
@@ -66,6 +68,7 @@ export default {
       search: "",
       strictReadonly: false,
       searchEditWindow: "",
+      activeSwitch: true,
       loading: true,
       editWindow: {
         loading: false,
@@ -337,9 +340,13 @@ export default {
           me.editWindow.loading = false;
           Object.assign(me.projectTeams[me.editedIndex], response.data);
           me.editedItem = Object.assign(item, response.data);
+          if (me.activeSwitch) {
+            me.editedItem.members = me.editedItem.members.filter((m) => m.active);
+          }
           for (let member of me.editedItem.members) {
             member.name =
               member.last_name.trim() + ", " + member.first_name.trim();
+            member.agAll = me.editedItem.name;
           }
           me.editedItem.members.sort((a, b) =>
             a.name < b.name ? -1 : a.name == b.name ? 0 : 1

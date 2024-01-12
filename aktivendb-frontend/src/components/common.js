@@ -11,8 +11,17 @@ function toDate(t) {
   return d;
 }
 
-function makeSchema(me) {
-  return [
+function makeSchema(me, members) {
+  let ags = new Set();
+  if (members != null) {
+    for (let m of members) {
+      for (let ag of m.ags) {
+        ags.add(ag);
+      }
+    }
+  }
+
+  let schema = [
     /*
         {
             column: "Name",
@@ -103,7 +112,7 @@ function makeSchema(me) {
     {
       column: "AGs",
       type: String,
-      value: (member) => member.ags,
+      value: (member) => member.agAll,
       width: 30,
     },
     {
@@ -167,6 +176,16 @@ function makeSchema(me) {
       width: 15,
     },
   ];
+
+  for (let ag of [...ags].sort()) {
+    schema.push({
+      column: ag,
+      type: String,
+      value: (member) => (member.ags.includes(ag) ? "Ja" : "Nein"),
+      width: 20,
+    });
+  }
+  return schema;
 }
 
 export default makeSchema;

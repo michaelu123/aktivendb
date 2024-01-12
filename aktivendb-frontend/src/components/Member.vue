@@ -642,14 +642,15 @@ export default {
           if (!m.with_details)
             continue;
           let m2 = await this.getMemberFromApi(m.id);
-          m.ags = m2.project_teams.map((t) => t.name).join(",");
-          console.log("ags", m.name, m.ags);
+          m.ags = m2.project_teams.filter((t) => t.with_details).map((t) => t.name);
+          m.agAll = m.ags.join(",");
+          console.log("ags", m.name, m.agAll);
           myMembers.push(m);
         }
       } finally {
         this.loadingTeams = false;
       }
-      const schema = makeSchema(me);
+      const schema = makeSchema(me, myMembers);
 
       if (this.activeSwitch) {
         myMembers = myMembers.filter(m => m.active == "1")
