@@ -9,8 +9,8 @@ import Import1 from "@/views/Import1.vue";
 import Import2 from "@/views/Import2.vue";
 import Import3 from "@/views/Import3.vue";
 */
-// import ImportSB from "@/views/ImportSB.vue";
-import History from "@/views/History.vue";
+import ImportSB from "@/views/ImportSB.vue";
+// import History from "@/views/History.vue";
 Vue.use(Router);
 
 export default new Router({
@@ -43,13 +43,12 @@ export default new Router({
       component: ProjectTeam,
       props: true,
     },
-    /*
     {
       name: "importSB",
       path: "/importSB",
       component: ImportSB,
     },
-/*  {
+    /*  {
       name: "import1",
       path: "/import1",
       component: Import1,
@@ -91,11 +90,11 @@ export default new Router({
       // component: () => import(/!* webpackChunkName: "about" *!/ '@/views/About.vue')
       component: About
     }
-*/
     {
       name: "history",
       path: "/history",
       component: History,
     },
+*/
   ],
 });

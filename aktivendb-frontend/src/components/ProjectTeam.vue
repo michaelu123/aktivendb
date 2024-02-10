@@ -15,6 +15,7 @@
           :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddTeamToTeamsDialog>
+        <History v-if="history.shown" :projectTeams="projectTeams" :members="allMembers" :history="history" />
         <v-spacer></v-spacer>
         <v-switch class="ml-2" v-model="activeSwitch" label="Nur Aktive"> </v-switch>
         <v-spacer></v-spacer>
@@ -43,8 +44,11 @@
         <v-icon small class="mr-2" @click.stop="editItem(item)" v-if="!strictReadonly">
           edit
         </v-icon>
-        <v-icon small @click.stop="deleteItem(item)" v-if="!strictReadonly">
+        <v-icon small class="mr-2" @click.stop="deleteItem(item)" v-if="!strictReadonly">
           delete
+        </v-icon>
+        <v-icon small @click.stop="historyItem(item)" v-if="isAdmin()">
+          history
         </v-icon>
       </template>
       <template v-slot:item.needs_first_aid_training="{ item }">
@@ -56,12 +60,12 @@
 </template>
 
 <script>
-import { mdiCalendarBlankMultiple } from '@mdi/js';
 import AddTeamToTeamsDialog from "./AddTeamToTeamsDialog.vue";
+import History from "./History.vue";
 import writeXlsxFile from "write-excel-file";
 
 export default {
-  components: { AddTeamToTeamsDialog },
+  components: { AddTeamToTeamsDialog, History },
   name: "ProjectTeam",
   data() {
     return {
@@ -179,6 +183,11 @@ export default {
       memberRoles: [],
       excelFileName: "",
       loadingMembers: false,
+      history: {
+        shown: false,
+        id: null,
+        table: "project_teams"
+      },
     };
   },
   watch: {
@@ -387,6 +396,10 @@ export default {
             me.handleRequestError(error);
           });
       }
+    },
+    historyItem(item) {
+      this.history.shown = true;
+      this.history.id = item.id;
     },
     closeEditWindow() {
       this.editWindow.saveInProgress = false;

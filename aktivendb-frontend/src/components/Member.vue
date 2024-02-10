@@ -10,11 +10,12 @@
     <v-data-table :headers="headers" :items="members" :search="search" :loading="loading" loading-text="Wird geladen..."
       @click:row="viewItem">
       <template v-slot:top>
-        <AddMemberToMembersDialog :editWindow="editWindow" :editedItem="editedItem" :memberRoles="memberRoles"
-          :projectTeams="projectTeams" :allProjectTeams="allProjectTeams" :strictReadonly="strictReadonly"
-          :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
+        <AddMemberToMembersDialog v-if="editWindow.shown" :editWindow="editWindow" :editedItem="editedItem"
+          :memberRoles="memberRoles" :projectTeams="projectTeams" :allProjectTeams="allProjectTeams"
+          :strictReadonly="strictReadonly" :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddMemberToMembersDialog>
+        <History v-if="history.shown" :projectTeams="allProjectTeams" :members="members" :history="history" />
         <v-spacer></v-spacer>
         <v-row class="ml-2">
           <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
@@ -60,8 +61,11 @@
         <v-icon small class="mr-2" @click.stop="editItem(item)" v-if="!strictReadonly && item.with_details">
           edit
         </v-icon>
-        <v-icon small @click.stop="deleteItem(item)" v-if="!strictReadonly && isAdmin()">
+        <v-icon small class="mr-2" @click.stop="deleteItem(item)" v-if="!strictReadonly && isAdmin()">
           delete
+        </v-icon>
+        <v-icon small @click.stop="historyItem(item)" v-if="isAdmin()">
+          history
         </v-icon>
       </template>
       <template v-slot:item.active="{ item }">
@@ -106,11 +110,12 @@
 
 <script>
 import AddMemberToMembersDialog from "./AddMemberToMembersDialog.vue";
+import History from "./History.vue";
 import writeXlsxFile from "write-excel-file";
 import makeSchema from "./common"
 
 export default {
-  components: { AddMemberToMembersDialog },
+  components: { AddMemberToMembersDialog, History },
   name: "Member",
   data() {
     return {
@@ -191,6 +196,7 @@ export default {
           value: "action",
           sortable: false,
           filterable: false,
+          width: "100px",
         },
         {
           text: "Aktiv",
@@ -321,6 +327,11 @@ export default {
       excelFileName: "",
       preferredEmail: "Bevorzugte Email-Adresse",
       loadingTeams: false,
+      history: {
+        shown: false,
+        id: null,
+        table: "members",
+      },
     };
   },
   watch: {
@@ -541,6 +552,10 @@ export default {
             me.handleRequestError(error);
           });
       }
+    },
+    historyItem(item) {
+      this.history.shown = true;
+      this.history.id = item.id;
     },
     closeEditWindow() {
       this.editWindow.saveInProgress = false;

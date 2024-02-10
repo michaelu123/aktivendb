@@ -180,8 +180,8 @@ function makeSchema(me, members) {
   for (let ag of [...ags].sort()) {
     schema.push({
       column: ag,
-      type: String,
-      value: (member) => (member.ags.includes(ag) ? "Ja" : "Nein"),
+      type: Boolean,
+      value: (member) => member.ags.includes(ag),
       width: 20,
     });
   }

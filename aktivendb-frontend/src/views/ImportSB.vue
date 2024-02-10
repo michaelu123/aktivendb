@@ -13,6 +13,9 @@
 // am 29.9.23 bis Kloppmann 256 importiert (mit Testlauf)
 // am 02.01.24 responded_to_questionaire=0, importiere bis Sacchi 163
 // am 08.01.24 bis Krahmer 219 importiert
+// am 12.01.24 bis Schröder 238 importiert
+// am 19.01.24 bis Ganzer 244 importiert
+// am 05.02.24 bis Heitler 250 importiert
 
 <template>
   <v-content>
