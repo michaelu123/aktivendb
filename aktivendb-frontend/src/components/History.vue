@@ -4,10 +4,20 @@
             <v-card-title>
                 History
             </v-card-title>
+            <v-data-table :headers="headers" :items="historyArray" :search="search">
+                <template v-slot:top>
+                    <v-text-field v-model="search" label="Suchen" append-icon="search" single-line hide-details
+                        class="ml-2"></v-text-field>
+                </template>
+
+            </v-data-table>
+
             <v-card-text>
-                <div v-for="line in historyTxt" :key="line">
-                    <p>{{ line }}</p>
+                <div v-for="line in historyTxt" :key="line.lineNo">
+                    <p v-if="line.indent == 0">{{ line.msg }}</p>
+                    <p class="ml-10" v-if="line.indent != 0">{{ line.msg }}</p>
                 </div>
+                <!-- <textarea cols="200" rows="50">{{ historyArrayText }}</textarea> -->
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -18,87 +28,125 @@
 </template>
 
 <script>
+import { parse } from "../utils.js"
 
-import dataJson from "C:/Users/Michael/VueProjects/aktivendb/aktivendb-frontend/history.json"
 let users = {};
 let memberNames = {};
 let teamNames = {
     // deleted records not fetched from API call
-    "31": "Test",
-    "38": "Test",
-    "44": "Test",
     "22": "AG Radfahrschule",
     "29": "AG Leitungen",
+    "30": "Test AG",
+    "31": "Test",
+    "32": "Test",
+    "33": "Test ML",
     "34": "AG Tagestouren",
+    "36": "test",
+    "37": "Test",
+    "38": "Test",
+    "44": "Test",
+    "63": "TEST2",
     "64": "OG Ismaning Test",
 };
+let lineNo = 0;
 
-function parse(data) {
-    if (typeof data.record_new !== "string") return data;
-    try {
-        data.record_new = JSON.parse(data.record_new);
-        data.record_old = JSON.parse(data.record_old);
-        for (const prop in data) {
-            if (prop.endsWith("_id")) {
-                data[prop] = +data[prop];
-            }
-        }
-        for (const prop in data.record_new) {
-            if (prop.endsWith("_id")) {
-                data.record_new[prop] = +data.record_new[prop];
-            }
-        }
-        for (const prop in data.record_old) {
-            if (prop.endsWith("_id")) {
-                data.record_old[prop] = +data.record_old[prop];
-            }
-        }
-        // eslint-disable-next-line no-empty
-    } catch (e) { }
-    return data;
+/*
+{
+    when
+    who
+    what (adds to/deletes from)
+    whom
+    where
+    with
+ 
+ 
+    when
+    who
+    what (udates)
+    whom
+    changes: {
+        propName
+        propOld
+        propNew
+    }
 }
+*/
+
+
 
 export default {
     name: 'history',
     props: ["history", "members", "projectTeams"],
     async mounted() {
         for (const t of this.projectTeams) {
-            teamNames[t.id] = t.name;
+            teamNames[t.id.toString()] = t.name;
         }
         for (const m of this.members) {
-            memberNames[m.id] = m.last_name + ", " + m.first_name;
+            memberNames[m.id.toString()] = m.last_name + ", " + m.first_name;
         }
 
-        console.log("read history", this.history.id);
-        // let dataH = await this.getHistoryFromApi(this.history.table, this.history.id);
-        let dataH = [];
-        for (let data of dataJson) {
-            data = parse(data);
-            if (this.history.table == data.reference_table && +data.reference_id == this.history.id) {
-                dataH.push(parse(data));
-            } else if (data.reference_table == "project_team_member") {
-                if (this.history.table == "members" && +data.record_new.member_id == this.history.id) {
-                    dataH.push(data);
-                }
-                if (this.history.table == "project_teams" && +data.record_new.project_team_id == this.history.id) {
-                    dataH.push(data);
-                }
-            }
+        let dataH;
+        if (this.history.id != null) {
+            console.log("read history", this.history.id);
+            dataH = await this.getHistoryFromApi(this.history.table, this.history.id);
+        } else {
+            dataH = this.history.dataH;
         }
-
         console.log("explain history");
+        lineNo = 0;
         for (const event of dataH) {
             let email = (await this.getUserFromApi(event.user_id)).email;
             this.explainHistory(event, email);
+            lineNo++;
         }
         console.log("finished");
     },
     data() {
         return {
             historyTxt: [],
+            historyArray: [],
+            search: "",
+            headers: [
+                {
+                    text: "Wann",
+                    value: "when",
+                    sortable: true,
+                    filterable: true,
+                    // width: "100px",
+                },
+                {
+                    text: "Wer",
+                    value: "who",
+                    sortable: true,
+                    filterable: true,
+                },
+                {
+                    text: "Was",
+                    value: "what",
+                    sortable: true,
+                    filterable: true,
+                },
+                {
+                    text: "Mitglied",
+                    value: "whom",
+                    sortable: true,
+                    filterable: true,
+                },
+                {
+                    text: "Gliederung",
+                    value: "where",
+                    sortable: true,
+                    filterable: true,
+                },
+            ],
         };
     },
     components: {
+    },
+    computed: {
+        historyArrayText() {
+            return JSON.stringify(this.historyArray, null, 4);
+        }
     },
     methods: {
         async getHistoryFromApi(table, id) {
@@ -114,6 +162,7 @@ export default {
             }
         },
         async getUserFromApi(id) {
+            id = id.toString();
             let user = users[id];
             if (user != null) return user;
             try {
@@ -122,14 +171,13 @@ export default {
                 );
                 user = response.data;
                 users[id] = user;
-                console.log("id", id, "user", user);
             } catch (e) {
                 console.log("ERRORUSER2", id, e);
             }
             return user;
         },
         explainHistory(event, email) {
-            // event = parse(event);
+            event = parse(event);
             if (event.reference_table == "members") {
                 this.explainMember(event, email);
             } else if (event.reference_table == "project_team_member") {
@@ -141,7 +189,10 @@ export default {
             }
         },
         explainMember(member, email) {
+            let upd = [];
+            let historyObj = {};
             let msg = email;
+            historyObj["who"] = email;
             let name = member.record_new["name"];
             if (name == null) name = "";
             name = name.trim();
@@ -149,76 +200,135 @@ export default {
                 name = member.record_new.last_name + ", " + member.record_new.first_name;
                 name = name.trim();
             }
+            historyObj["whom"] = name;
             if (Array.isArray(member.record_old)) {
-                msg = member.record_new.created_at.substring(0, 10) + " " + msg;
+                msg = member.record_new.created_at + " " + msg;
                 msg += " adds " + name;
+                historyObj["what"] = "fügt hinzu";
+                historyObj["when"] = member.record_new.created_at;
             } else if (member.record_old.deleted_at != null && member.record_new.deleted_at != null) {
-                msg = member.record_new.deleted_at.substring(0, 10) + " " + msg;
+                msg = member.record_new.deleted_at + " " + msg;
                 msg += " deletes " + name;
+                historyObj["what"] = "löscht";
+                historyObj["when"] = member.record_new.deleted_at;
             } else {
-                let upd = "";
+                let changes = {};
+                historyObj["what"] = "ändert";
+                historyObj["changes"] = changes;
                 for (const prop in member.record_new) {
                     if (prop.endsWith("_at")) continue; //normally only different TZ
-                    if (member.record_new[prop] != member.record_old[prop]) {
-                        upd += prop + ":" + member.record_old[prop] + "=>" + member.record_new[prop] + " / ";
-                        // console.log("   diff", prop, member.record_new[prop], member.record_old[prop]);
+                    let newProp = member.record_new[prop];
+                    let oldProp = member.record_old[prop];
+                    if (newProp != oldProp) {
+                        upd.push(prop + ":" + oldProp + "=>" + newProp);
+                        changes["propName"] = prop;
+                        changes["propOld"] = oldProp;
+                        changes["propNew"] = newProp;
                     }
                 }
-                if (upd == "") return;
-                msg = member.record_new.updated_at.substring(0, 10) + " " + msg;
-                msg += " updates " + name + ": " + upd;
+                if (upd.length == 0) return;
+                msg = member.record_new.updated_at + " " + msg + " updates " + name + ": ";
+                historyObj["when"] = member.record_new.updated_at;
             }
-            this.historyTxt.push(msg);
+            this.historyTxt.push({ indent: 0, msg, lineNo });
+            for (let u of upd) {
+                lineNo++;
+                this.historyTxt.push({ indent: 1, msg: u, lineNo: lineNo });
+            }
+            this.historyArray.push(historyObj);
         },
         explainTeamMember(tm, email) {
-            if (tm.record_new.project_team_id <= 0) return;
-            const teamName = this.teamName(tm.record_new.project_team_id);
+            const projTeamId = tm.record_new.project_team_id;
+            if (!projTeamId || +projTeamId <= 0) return;
+            const teamName = this.teamName(projTeamId);
             if (teamName.toLowerCase().startsWith("test")) return;
             const memberName = this.memberName(tm.record_new.member_id);
+            let upd = [];
+            let historyObj = {};
             let msg = email;
+            historyObj["who"] = email;
+            historyObj["whom"] = memberName;
+            historyObj["where"] = teamName;
             if (Array.isArray(tm.record_old)) {
-                msg = tm.record_new.created_at.substring(0, 10) + " " + msg;
+                msg = tm.record_new.created_at + " " + msg;
                 msg += " adds " + memberName + " to " + teamName + " with role " + tm.record_new.member_role_id;
+                historyObj["what"] = "fügt hinzu";
+                historyObj["with"] = "role " + tm.record_new.member_role_id;
+                historyObj["when"] = tm.record_new.created_at;
             } else if (tm.record_old.deleted_at != null && tm.record_new.deleted_at != null) {
-                msg = tm.record_new.deleted_at.substring(0, 10) + " " + msg;
+                msg = tm.record_new.deleted_at + " " + msg;
                 msg += " deletes " + memberName + " from " + teamName;
+                historyObj["what"] = "löscht";
+                historyObj["when"] = tm.record_new.deleted_at;
             } else {
-                let upd = "";
+                let changes = {};
+                historyObj["what"] = "ändert";
+                historyObj["changes"] = changes;
                 for (const prop in tm.record_new) {
                     if (prop.endsWith("_at")) continue; //normally only different TZ
-                    if (tm.record_new[prop] != tm.record_old[prop]) {
-                        upd += prop + ":" + tm.record_old[prop] + "=>" + tm.record_new[prop] + " / ";
+                    let newProp = tm.record_new[prop];
+                    let oldProp = tm.record_old[prop];
+                    if (newProp != oldProp) {
+                        upd.push(prop + ":" + oldProp + "=>" + newProp);
+                        changes["propName"] = prop;
+                        changes["propOld"] = oldProp;
+                        changes["propNew"] = newProp;
                     }
                 }
-                if (upd == "") return;
-                msg = tm.record_new.updated_at.substring(0, 10) + " " + msg;
-                msg += " updates " + memberName + " for " + teamName + ": " + upd;
+                if (upd.length == 0) return;
+                msg = tm.record_new.updated_at + " " + msg + " updates " + memberName + " for " + teamName + ": ";
+                historyObj["when"] = tm.record_new.updated_at;
             }
-            this.historyTxt.push(msg);
+            this.historyTxt.push({ indent: 0, msg, lineNo });
+            for (let u of upd) {
+                lineNo++;
+                this.historyTxt.push({ indent: 1, msg: u, lineNo: lineNo });
+            }
+            this.historyArray.push(historyObj);
         },
         explainTeam(team, email) {
+            let upd = [];
+            let historyObj = {};
             let msg = email;
+            let teamName = team.record_new.name;
+            historyObj["who"] = email;
+            historyObj["whom"] = teamName;
             if (Array.isArray(team.record_old)) {
-                msg = team.record_new.created_at.substring(0, 10) + " " + msg;
-                msg += " adds " + team.record_new.name;
-                console.log("Tcreated", team);
+                msg = team.record_new.created_at + " " + msg;
+                msg += " adds " + teamName;
+                historyObj["what"] = "fügt hinzu";
+                historyObj["when"] = team.record_new.created_at;
             } else if (team.record_old.deleted_at != null && team.record_new.deleted_at != null) {
-                msg = team.record_new.deleted_at.substring(0, 10) + " " + msg;
-                msg += " deletes " + team.record_new.name;
-                console.log("Tdeleted", team);
+                msg = team.record_new.deleted_at + " " + msg;
+                msg += " deletes " + teamName;
+                historyObj["what"] = "löscht";
+                historyObj["when"] = team.record_new.deleted_at;
             } else {
-                msg = team.record_new.updated_at.substring(0, 10) + " " + msg;
-                msg += " updates " + team.record_new.name + ": ";
-                console.log("Tchanged", team);
+                let changes = {};
+                historyObj["what"] = "ändert";
+                historyObj["changes"] = changes;
                 for (const prop in team.record_new) {
                     if (prop.endsWith("_at")) continue; //normally only different TZ
-                    if (team.record_new[prop] != team.record_old[prop]) {
-                        msg += prop + ":" + team.record_old[prop] + "=>" + team.record_new[prop] + " / ";
-                        console.log("   diff", prop, team.record_new[prop], team.record_old[prop]);
+                    let newProp = team.record_new[prop];
+                    let oldProp = team.record_old[prop];
+                    if (newProp != oldProp) {
+                        upd.push(prop + ":" + oldProp + "=>" + newProp);
+                        changes["propName"] = prop;
+                        changes["propOld"] = oldProp;
+                        changes["propNew"] = newProp;
                     }
                 }
+                if (upd.length == 0) return;
+                msg = team.record_new.updated_at + " " + msg;
+                msg += " updates " + teamName + ": ";
+                historyObj["when"] = team.record_new.updated_at;
             }
-            this.historyTxt.push(msg);
+            this.historyTxt.push({ indent: 0, msg, lineNo });
+            for (let u of upd) {
+                lineNo++;
+                this.historyTxt.push({ indent: 1, msg: u, lineNo: lineNo });
+            }
+            this.historyArray.push(historyObj);
         },
         teamName(id) {
             let tn = teamNames[id];

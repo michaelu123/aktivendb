@@ -79,3 +79,8 @@ Debuggen:
 enable Vetur extension
 npm run serve
 open http://localhost:8080/app/
+
+
+
+set NODE_OPTIONS=--openssl-legacy-provider 
+
