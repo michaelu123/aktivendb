@@ -15,7 +15,7 @@
           :strictReadonly="strictReadonly" :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddMemberToMembersDialog>
-        <History v-if="history.shown" :projectTeams="allProjectTeams" :members="members" :history="history" />
+        <HistoryDialog v-if="history.shown" :projectTeams="allProjectTeams" :members="members" :history="history" />
         <v-spacer></v-spacer>
         <v-row class="ml-2">
           <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
@@ -110,12 +110,12 @@
 
 <script>
 import AddMemberToMembersDialog from "./AddMemberToMembersDialog.vue";
-import History from "./History.vue";
+import HistoryDialog from "./HistoryDialog.vue";
 import writeXlsxFile from "write-excel-file";
 import makeSchema from "./common"
 
 export default {
-  components: { AddMemberToMembersDialog, History },
+  components: { AddMemberToMembersDialog, HistoryDialog },
   name: "Member",
   data() {
     return {

@@ -22,18 +22,18 @@
             </v-menu>
             <v-btn @click.prevent="show">Zeige</v-btn>
         </v-row>
-        <History v-if="history.shown" :projectTeams="projectTeams" :members="members" :history="history" />
+        <HistoryDialog v-if="history.shown" :projectTeams="projectTeams" :members="members" :history="history" />
     </v-container>
 </template>
 
 <script>
-import History from "../components/History.vue"
+import HistoryDialog from "../components/HistoryDialog.vue"
 import dataJson from "C:/Users/Michael/VueProjects/aktivendb/aktivendb-frontend/history.json"
 import { parse } from "../utils.js"
 
 export default {
     name: 'HistoryView',
-    components: { History },
+    components: { HistoryDialog },
     data() {
         return {
             members: [],

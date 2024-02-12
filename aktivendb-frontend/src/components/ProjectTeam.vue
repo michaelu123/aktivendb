@@ -15,7 +15,7 @@
           :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddTeamToTeamsDialog>
-        <History v-if="history.shown" :projectTeams="projectTeams" :members="allMembers" :history="history" />
+        <HistoryDialog v-if="history.shown" :projectTeams="projectTeams" :members="allMembers" :history="history" />
         <v-spacer></v-spacer>
         <v-switch class="ml-2" v-model="activeSwitch" label="Nur Aktive"> </v-switch>
         <v-spacer></v-spacer>
@@ -61,11 +61,11 @@
 
 <script>
 import AddTeamToTeamsDialog from "./AddTeamToTeamsDialog.vue";
-import History from "./History.vue";
+import HistoryDialog from "./HistoryDialog.vue";
 import writeXlsxFile from "write-excel-file";
 
 export default {
-  components: { AddTeamToTeamsDialog, History },
+  components: { AddTeamToTeamsDialog, HistoryDialog },
   name: "ProjectTeam",
   data() {
     return {
