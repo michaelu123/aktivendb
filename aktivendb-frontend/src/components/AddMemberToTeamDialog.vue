@@ -15,33 +15,33 @@
           <v-form ref="form" v-model="editWindow.memberList.editProjectTeamMemberWindow.formValid
             " lazy-validation>
             <v-select v-model="editWindow.memberList.editedProjectTeamMember
-                .project_team_member.member_role_id
+              .project_team_member.member_role_id
               " :items="memberRoles" item-text="title" item-value="id" label="Rolle" required
               :rules="[(v) => v != -1 || 'Bitte Rolle angeben']" :readonly="editWindow.memberList.editProjectTeamMemberWindow.readonly
                 " :error="!!editWindow.memberList.editProjectTeamMemberWindow.errors
-      .member_role_id
+    .member_role_id
     " :error-messages="editWindow.memberList.editProjectTeamMemberWindow.errors
-      .member_role_id
+    .member_role_id
     "></v-select>
             <v-text-field v-model="editedItem.name" label="AG/Gruppe" readonly></v-text-field>
             <v-select @keypress="keypr" @focus="focus" v-if="editProjectTeamMemberNew" v-model="editWindow.memberList.editedProjectTeamMember
-                .project_team_member.member_id
+              .project_team_member.member_id
               " :items="selMembers" item-text="name" item-value="id" label="Person" required
               :rules="[(v) => v != -1 || 'Bitte Person wählen']" :readonly="editWindow.memberList.editProjectTeamMemberWindow.readonly
                 " :error="!!editWindow.memberList.editProjectTeamMemberWindow.errors
-      .member_id
+    .member_id
     " :error-messages="editWindow.memberList.editProjectTeamMemberWindow.errors
-      .member_id
+    .member_id
     "></v-select>
             <v-text-field v-if="!editProjectTeamMemberNew" v-model="editWindow.memberList.editedProjectTeamMember.name"
               label="Person" readonly></v-text-field>
             <v-textarea v-model="editWindow.memberList.editedProjectTeamMember
-                .project_team_member.admin_comments
+              .project_team_member.admin_comments
               " label="Kommentar" rows="3" auto-grow :readonly="editWindow.memberList.editProjectTeamMemberWindow.readonly
     " :error="!!editWindow.memberList.editProjectTeamMemberWindow.errors
-      .admin_comments
+    .admin_comments
     " :error-messages="editWindow.memberList.editProjectTeamMemberWindow.errors
-      .admin_comments
+    .admin_comments
     "></v-textarea>
           </v-form>
         </v-container>
@@ -102,6 +102,7 @@ export default {
     keypr(x) {
       this.sname += x.key.toLowerCase();
     },
+    // eslint-disable-next-line no-unused-vars
     focus(_) {
       this.sname = "";
     },

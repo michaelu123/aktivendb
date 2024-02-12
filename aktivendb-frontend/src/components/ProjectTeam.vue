@@ -15,7 +15,8 @@
           :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddTeamToTeamsDialog>
-        <HistoryDialog v-if="history.shown" :projectTeams="projectTeams" :members="allMembers" :history="history" />
+        <HistoryDialog v-if="isAdmin() && history.shown" :projectTeams="projectTeams" :members="allMembers"
+          :history="history" />
         <v-spacer></v-spacer>
         <v-switch class="ml-2" v-model="activeSwitch" label="Nur Aktive"> </v-switch>
         <v-spacer></v-spacer>
@@ -387,6 +388,7 @@ export default {
             "?token=" +
             sessionStorage.getItem("token")
           )
+          // eslint-disable-next-line no-unused-vars
           .then(function (_) {
             me.projectTeams.splice(index, 1);
 

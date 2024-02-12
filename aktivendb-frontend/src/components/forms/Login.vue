@@ -3,13 +3,7 @@
     <v-card class="elevation-12 mx-auto" min-width="420px">
       <v-card-title>
         <div>
-          <v-alert
-            :type="alert.type"
-            outlined
-            v-model="alert.shown"
-            dismissible
-            width="100%"
-          >
+          <v-alert :type="alert.type" outlined v-model="alert.shown" dismissible width="100%">
             {{ alert.text }}
           </v-alert>
         </div>
@@ -24,82 +18,30 @@
           <div class="alert alert-warning" v-if="infoError">{{ error }}</div>
 
           <v-text-field v-model="email" label="E-Mail" required></v-text-field>
-          <v-text-field
-            v-if="!chgPasswd"
-            :append-icon="showPwd1 ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPwd1 ? 'text' : 'password'"
-            @click:append="showPwd1 = !showPwd1"
-            v-model="password"
-            label="Passwort"
-            required
-          ></v-text-field>
-          <v-text-field
-            v-if="chgPasswd"
-            :append-icon="showPwd2 ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPwd2 ? 'text' : 'password'"
-            @click:append="showPwd2 = !showPwd2"
-            autocomplete="password"
-            v-model="password"
-            label="Altes Passwort"
-            required
-          ></v-text-field>
-          <v-text-field
-            v-if="chgPasswd"
-            :append-icon="showPwd3 ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPwd3 ? 'text' : 'password'"
-            @click:append="showPwd3 = !showPwd3"
-            autocomplete="new-password"
-            v-model="newPasswd1"
-            label="Neues Passwort"
-            required
-          ></v-text-field>
-          <v-text-field
-            v-if="chgPasswd"
-            :append-icon="showPwd4 ? 'mdi-eye' : 'mdi-eye-off'"
-            :type="showPwd4 ? 'text' : 'password'"
-            @click:append="showPwd4 = !showPwd4"
-            autocomplete="new-password"
-            v-model="newPasswd2"
-            label="Neues Passwort wiederholen"
-            required
-          ></v-text-field>
+          <v-text-field v-if="!chgPasswd" :append-icon="showPwd1 ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="showPwd1 ? 'text' : 'password'" @click:append="showPwd1 = !showPwd1" v-model="password"
+            label="Passwort" required></v-text-field>
+          <v-text-field v-if="chgPasswd" :append-icon="showPwd2 ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="showPwd2 ? 'text' : 'password'" @click:append="showPwd2 = !showPwd2" autocomplete="password"
+            v-model="password" label="Altes Passwort" required></v-text-field>
+          <v-text-field v-if="chgPasswd" :append-icon="showPwd3 ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="showPwd3 ? 'text' : 'password'" @click:append="showPwd3 = !showPwd3" autocomplete="new-password"
+            v-model="newPasswd1" label="Neues Passwort" required></v-text-field>
+          <v-text-field v-if="chgPasswd" :append-icon="showPwd4 ? 'mdi-eye' : 'mdi-eye-off'"
+            :type="showPwd4 ? 'text' : 'password'" @click:append="showPwd4 = !showPwd4" autocomplete="new-password"
+            v-model="newPasswd2" label="Neues Passwort wiederholen" required></v-text-field>
 
-          <v-btn
-            class="my-5"
-            type="submit"
-            block
-            outlined
-            color="primary"
-            :loading="loading"
-            :disabled="loading"
-          >
+          <v-btn class="my-5" type="submit" block outlined color="primary" :loading="loading" :disabled="loading">
             Login
           </v-btn>
 
-          <v-btn
-            class="my-5"
-            @click.prevent="chgPasswd = !chgPasswd"
-            type="submit"
-            block
-            outlined
-            color="primary"
-            :loading="loading"
-            :disabled="loading"
-          >
+          <v-btn class="my-5" @click.prevent="chgPasswd = !chgPasswd" type="submit" block outlined color="primary"
+            :loading="loading" :disabled="loading">
             {{ chgPasswd ? "Passwort nicht ändern" : "Passwort ändern" }}
           </v-btn>
 
-          <v-btn
-            class="my-5"
-            v-if="chgPasswd"
-            @click.prevent="changePasswd"
-            type="submit"
-            block
-            outlined
-            color="primary"
-            :loading="loading"
-            :disabled="loading"
-          >
+          <v-btn class="my-5" v-if="chgPasswd" @click.prevent="changePasswd" type="submit" block outlined color="primary"
+            :loading="loading" :disabled="loading">
             Passwort jetzt ändern
           </v-btn>
         </v-form>
@@ -185,10 +127,13 @@ export default {
         .post("/auth/logout", {
           token: sessionStorage.getItem("token"),
         })
+        // eslint-disable-next-line no-unused-vars
         .then(function (response) {
-          var data = response.data;
+          // var data = response.data;
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("readonly");
+          sessionStorage.removeItem("is_admin");
+          sessionStorage.removeItem("email");
           me.$store.commit("logged_out");
           me.$router.push("/");
         })
@@ -229,7 +174,7 @@ export default {
         password_conf: this.newPasswd2,
       };
       try {
-        var response = await me.$http.post(
+        await me.$http.post(
           "/auth/change_password?token=" + sessionStorage.getItem("token"),
           newPasswd
         );

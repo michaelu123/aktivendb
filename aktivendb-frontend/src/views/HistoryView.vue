@@ -1,5 +1,5 @@
 <template>
-    <v-container>
+    <v-container v-if="isAdmin()">
         <h1>History</h1>
         <v-row>
             <v-menu v-model="showBeginDatePicker" :close-on-content-click="false" :nudge-right="40"
@@ -24,11 +24,14 @@
         </v-row>
         <HistoryDialog v-if="history.shown" :projectTeams="projectTeams" :members="members" :history="history" />
     </v-container>
+    <v-container v-else>
+        <h1>History only available as admin</h1>
+    </v-container>
 </template>
 
 <script>
 import HistoryDialog from "../components/HistoryDialog.vue"
-import dataJson from "C:/Users/Michael/VueProjects/aktivendb/aktivendb-frontend/history.json"
+import dataJson from "../..//history.json"
 import { parse } from "../utils.js"
 
 export default {
@@ -74,7 +77,6 @@ export default {
             );
             return response.data;
         },
-
         async show() {
             console.log("read history", this.history.id);
             let dataH = [];
@@ -89,6 +91,10 @@ export default {
             this.history.shown = true;
             console.log("finished");
         },
+        isAdmin() {
+            return sessionStorage.getItem("is_admin") == "true";
+        },
+
     },
 
 }

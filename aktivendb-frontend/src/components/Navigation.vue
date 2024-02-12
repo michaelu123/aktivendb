@@ -7,6 +7,7 @@
       <v-btn text to="/"> Home </v-btn>
       <v-btn text to="/members" v-if="is_logged_in"> Aktive </v-btn>
       <v-btn text to="/project_teams" v-if="is_logged_in"> AG's/OG's </v-btn>
+      <v-btn text to="/history" v-if="is_admin"> History</v-btn>
     </v-toolbar-items>
     <div class="flex-grow-1"></div>
     <v-toolbar-items>
@@ -24,12 +25,14 @@
 export default {
   name: "Navigation",
   computed: {
-    is_logged_in: function () {
+    is_logged_in() {
       return this.$store.state.is_logged_in;
+    },
+    is_admin() {
+      return this.$store.state.is_admin;
     },
   },
 };
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

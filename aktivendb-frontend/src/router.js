@@ -1,16 +1,16 @@
 import Vue from "vue";
 import Router from "vue-router";
-import Home from "@/views/Home.vue";
-import Member from "@/views/Member.vue";
-import ProjectTeam from "@/views/ProjectTeam.vue";
+import HomeView from "@/views/HomeView.vue";
+import MemberView from "@/views/MemberView.vue";
+import ProjectTeamView from "@/views/ProjectTeamView.vue";
+import HistoryView from "@/views/HistoryView.vue";
 import Login from "@/components/forms/Login.vue";
+import ImportSBView from "@/views/ImportSBView.vue";
 /* 
 import Import1 from "@/views/Import1.vue";
 import Import2 from "@/views/Import2.vue";
 import Import3 from "@/views/Import3.vue";
 */
-import ImportSB from "@/views/ImportSB.vue";
-import HistoryView from "@/views/HistoryView.vue";
 Vue.use(Router);
 
 export default new Router({
@@ -19,7 +19,7 @@ export default new Router({
     {
       name: "home",
       path: "/",
-      component: Home,
+      component: HomeView,
     },
     {
       name: "login",
@@ -34,19 +34,19 @@ export default new Router({
     {
       name: "members",
       path: "/members/:id?/:user?",
-      component: Member,
+      component: MemberView,
       props: true,
     },
     {
       name: "project_teams",
       path: "/project_teams/:id?",
-      component: ProjectTeam,
+      component: ProjectTeamView,
       props: true,
     },
     {
       name: "importSB",
       path: "/importSB",
-      component: ImportSB,
+      component: ImportSBView,
     },
     {
       name: "history",
@@ -79,12 +79,6 @@ export default new Router({
       path: '/project_team_members/:entity?/:entity_id?',
       component: ProjectTeamMembers,
       props: true
-    }
-*/
-    /*  {
-      path: '/',
-      name: 'home',
-      component: Home
     },
     {
       path: '/about',

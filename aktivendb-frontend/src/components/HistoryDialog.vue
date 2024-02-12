@@ -3,21 +3,44 @@
         <v-card>
             <v-card-title>
                 History
+                <v-spacer></v-spacer>
+                <v-btn @click.prevent="alsText = !alsText">{{ alsText ? "Als Tabelle" : "Als Text" }}</v-btn>
             </v-card-title>
-            <v-data-table :headers="headers" :items="historyArray" :search="search">
+            <v-data-table v-if="!alsText" :headers="headers" :items="historyArray" :search="search" show-expand
+                single-expand item-key="key">
                 <template v-slot:top>
                     <v-text-field v-model="search" label="Suchen" append-icon="search" single-line hide-details
                         class="ml-2"></v-text-field>
                 </template>
+                <template v-slot:expanded-item="{ headers, item }">
+                    <td :colspan="headers.length">
+                        <table>
+                            <tr>
+                                <th>Feld</th>
+                                <th>Alt</th>
+                                <th>Neu</th>
+                            </tr>
+                            <tr v-for="(change, index) in item.changes" :key="index">
+                                <td>{{ change.propName }}</td>
+                                <td>{{ change.propOld }}</td>
+                                <td>{{ change.propNew }}</td>
 
+                            </tr>
+                        </table>
+                    </td>
+                </template>
+                <template v-slot:item.data-table-expand="{ item, expand, isExpanded }">
+                    <v-btn height="30" v-if="item.changes" @click.prevent="expand(!isExpanded)">
+                        <v-icon small>expand</v-icon>
+                    </v-btn>
+                </template>
             </v-data-table>
 
-            <v-card-text>
+            <v-card-text v-if="alsText">
                 <div v-for="line in historyTxt" :key="line.lineNo">
-                    <p v-if="line.indent == 0">{{ line.msg }}</p>
-                    <p class="ml-10" v-if="line.indent != 0">{{ line.msg }}</p>
+                    <p class="mb-0" v-if="line.indent == 0">{{ line.msg }}</p>
+                    <p class="mb-0 ml-10" v-if="line.indent != 0">{{ line.msg }}</p>
                 </div>
-                <!-- <textarea cols="200" rows="50">{{ historyArrayText }}</textarea> -->
             </v-card-text>
             <v-card-actions>
                 <v-spacer></v-spacer>
@@ -50,30 +73,6 @@ let teamNames = {
 };
 let lineNo = 0;
 
-/*
-{
-    when
-    who
-    what (adds to/deletes from)
-    whom
-    where
-    with
- 
- 
-    when
-    who
-    what (udates)
-    whom
-    changes: {
-        propName
-        propOld
-        propNew
-    }
-}
-*/
-
-
-
 export default {
     name: 'history',
     props: ["history", "members", "projectTeams"],
@@ -103,6 +102,7 @@ export default {
     },
     data() {
         return {
+            alsText: false,
             historyTxt: [],
             historyArray: [],
             search: "",
@@ -138,17 +138,20 @@ export default {
                     sortable: true,
                     filterable: true,
                 },
+                {
+                    text: 'Änderungen',
+                    value: 'data-table-expand',
+                },
             ],
         };
     },
     components: {
     },
-    computed: {
-        historyArrayText() {
-            return JSON.stringify(this.historyArray, null, 4);
-        }
-    },
     methods: {
+        logge(obj) {
+            console.log("obj", obj);
+            return obj;
+        },
         async getHistoryFromApi(table, id) {
             try {
                 let response = await this.$http.get(
@@ -192,7 +195,8 @@ export default {
             let upd = [];
             let historyObj = {};
             let msg = email;
-            historyObj["who"] = email;
+            historyObj["who"] = email.replace("@adfc-muenchen.de", "");
+            historyObj["key"] = lineNo;
             let name = member.record_new["name"];
             if (name == null) name = "";
             name = name.trim();
@@ -212,24 +216,23 @@ export default {
                 historyObj["what"] = "löscht";
                 historyObj["when"] = member.record_new.deleted_at;
             } else {
-                let changes = {};
+                let changesArray = [];
                 historyObj["what"] = "ändert";
-                historyObj["changes"] = changes;
-                for (const prop in member.record_new) {
-                    if (prop.endsWith("_at")) continue; //normally only different TZ
-                    let newProp = member.record_new[prop];
-                    let oldProp = member.record_old[prop];
-                    if (newProp != oldProp) {
-                        upd.push(prop + ":" + oldProp + "=>" + newProp);
-                        changes["propName"] = prop;
-                        changes["propOld"] = oldProp;
-                        changes["propNew"] = newProp;
+                historyObj["changes"] = changesArray;
+                for (const propName in member.record_new) {
+                    if (propName.endsWith("_at")) continue; //normally only different TZ
+                    let propNew = member.record_new[propName];
+                    let propOld = member.record_old[propName];
+                    if (propNew != propOld) {
+                        upd.push(propName + ":" + propOld + "=>" + propNew);
+                        changesArray.push({ propName, propOld, propNew });
                     }
                 }
-                if (upd.length == 0) return;
-                msg = member.record_new.updated_at + " " + msg + " updates " + name + ": ";
-                historyObj["when"] = member.record_new.updated_at;
             }
+            if (upd.length == 0) return;
+            msg = member.record_new.updated_at + " " + msg + " updates " + name + ": ";
+            historyObj["when"] = member.record_new.updated_at;
+
             this.historyTxt.push({ indent: 0, msg, lineNo });
             for (let u of upd) {
                 lineNo++;
@@ -249,6 +252,7 @@ export default {
             historyObj["who"] = email;
             historyObj["whom"] = memberName;
             historyObj["where"] = teamName;
+            historyObj["key"] = lineNo;
             if (Array.isArray(tm.record_old)) {
                 msg = tm.record_new.created_at + " " + msg;
                 msg += " adds " + memberName + " to " + teamName + " with role " + tm.record_new.member_role_id;
@@ -261,18 +265,16 @@ export default {
                 historyObj["what"] = "löscht";
                 historyObj["when"] = tm.record_new.deleted_at;
             } else {
-                let changes = {};
+                let changesArray = [];
                 historyObj["what"] = "ändert";
-                historyObj["changes"] = changes;
-                for (const prop in tm.record_new) {
-                    if (prop.endsWith("_at")) continue; //normally only different TZ
-                    let newProp = tm.record_new[prop];
-                    let oldProp = tm.record_old[prop];
-                    if (newProp != oldProp) {
-                        upd.push(prop + ":" + oldProp + "=>" + newProp);
-                        changes["propName"] = prop;
-                        changes["propOld"] = oldProp;
-                        changes["propNew"] = newProp;
+                historyObj["changes"] = changesArray;
+                for (const propName in tm.record_new) {
+                    if (propName.endsWith("_at")) continue; //normally only different TZ
+                    let propNew = tm.record_new[propName];
+                    let propOld = tm.record_old[propName];
+                    if (propNew != propOld) {
+                        upd.push(propName + ":" + propOld + "=>" + propNew);
+                        changesArray.push({ propName, propOld, propNew });
                     }
                 }
                 if (upd.length == 0) return;
@@ -293,6 +295,7 @@ export default {
             let teamName = team.record_new.name;
             historyObj["who"] = email;
             historyObj["whom"] = teamName;
+            historyObj["key"] = lineNo;
             if (Array.isArray(team.record_old)) {
                 msg = team.record_new.created_at + " " + msg;
                 msg += " adds " + teamName;
@@ -304,18 +307,16 @@ export default {
                 historyObj["what"] = "löscht";
                 historyObj["when"] = team.record_new.deleted_at;
             } else {
-                let changes = {};
+                let changesArray = [];
                 historyObj["what"] = "ändert";
-                historyObj["changes"] = changes;
-                for (const prop in team.record_new) {
-                    if (prop.endsWith("_at")) continue; //normally only different TZ
-                    let newProp = team.record_new[prop];
-                    let oldProp = team.record_old[prop];
-                    if (newProp != oldProp) {
-                        upd.push(prop + ":" + oldProp + "=>" + newProp);
-                        changes["propName"] = prop;
-                        changes["propOld"] = oldProp;
-                        changes["propNew"] = newProp;
+                historyObj["changes"] = changesArray;
+                for (const propName in team.record_new) {
+                    if (propName.endsWith("_at")) continue; //normally only different TZ
+                    let propNew = team.record_new[propName];
+                    let propOld = team.record_old[propName];
+                    if (propNew != propOld) {
+                        upd.push(propName + ":" + propOld + "=>" + propNew);
+                        changesArray.push({ propName, propOld, propNew });
                     }
                 }
                 if (upd.length == 0) return;

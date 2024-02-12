@@ -15,7 +15,8 @@
           :strictReadonly="strictReadonly" :searchEditWindow="searchEditWindow" :checkForTrue="checkForTrue"
           :closeEditProjectTeamMemberWindow="closeEditProjectTeamMemberWindow" :handleRequestError="handleRequestError"
           @closeEW="closeEditWindow" @saveEW="saveEditWindow"></AddMemberToMembersDialog>
-        <HistoryDialog v-if="history.shown" :projectTeams="allProjectTeams" :members="members" :history="history" />
+        <HistoryDialog v-if="isAdmin() && history.shown" :projectTeams="allProjectTeams" :members="members"
+          :history="history" />
         <v-spacer></v-spacer>
         <v-row class="ml-2">
           <v-switch v-model="activeSwitch" label="Nur Aktive"> </v-switch>
