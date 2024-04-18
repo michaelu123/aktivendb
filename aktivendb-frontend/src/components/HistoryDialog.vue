@@ -213,12 +213,19 @@ export default {
             } else if (member.record_old.deleted_at != null && member.record_new.deleted_at != null) {
                 msg = member.record_new.deleted_at + " " + msg;
                 msg += " deletes " + name;
+                let changesArray = [];
+                historyObj["changes"] = changesArray;
                 historyObj["what"] = "löscht";
                 historyObj["when"] = member.record_new.deleted_at;
+                for (const propName in member.record_old) {
+                    if (propName.endsWith("_at")) continue;
+                    if (propName == "id") continue;
+                    let propOld = member.record_old[propName];
+                    upd.push(propName + ":" + propOld);
+                    changesArray.push({ propName, propNew: "", propOld });
+                }
             } else {
                 let changesArray = [];
-                historyObj["what"] = "ändert";
-                historyObj["changes"] = changesArray;
                 for (const propName in member.record_new) {
                     if (propName.endsWith("_at")) continue; //normally only different TZ
                     let propNew = member.record_new[propName];
@@ -228,11 +235,12 @@ export default {
                         changesArray.push({ propName, propOld, propNew });
                     }
                 }
+                if (upd.length == 0) return;
+                historyObj["what"] = "ändert";
+                historyObj["changes"] = changesArray;
+                msg = member.record_new.updated_at + " " + msg + " updates " + name + ": ";
+                historyObj["when"] = member.record_new.updated_at;
             }
-            if (upd.length == 0) return;
-            msg = member.record_new.updated_at + " " + msg + " updates " + name + ": ";
-            historyObj["when"] = member.record_new.updated_at;
-
             this.historyTxt.push({ indent: 0, msg, lineNo });
             for (let u of upd) {
                 lineNo++;
@@ -266,10 +274,8 @@ export default {
                 historyObj["when"] = tm.record_new.deleted_at;
             } else {
                 let changesArray = [];
-                historyObj["what"] = "ändert";
-                historyObj["changes"] = changesArray;
                 for (const propName in tm.record_new) {
-                    if (propName.endsWith("_at")) continue; //normally only different TZ
+                    if (propName.endsWith("_at")) continue;
                     let propNew = tm.record_new[propName];
                     let propOld = tm.record_old[propName];
                     if (propNew != propOld) {
@@ -278,6 +284,8 @@ export default {
                     }
                 }
                 if (upd.length == 0) return;
+                historyObj["what"] = "ändert";
+                historyObj["changes"] = changesArray;
                 msg = tm.record_new.updated_at + " " + msg + " updates " + memberName + " for " + teamName + ": ";
                 historyObj["when"] = tm.record_new.updated_at;
             }
@@ -308,10 +316,8 @@ export default {
                 historyObj["when"] = team.record_new.deleted_at;
             } else {
                 let changesArray = [];
-                historyObj["what"] = "ändert";
-                historyObj["changes"] = changesArray;
                 for (const propName in team.record_new) {
-                    if (propName.endsWith("_at")) continue; //normally only different TZ
+                    if (propName.endsWith("_at")) continue;
                     let propNew = team.record_new[propName];
                     let propOld = team.record_old[propName];
                     if (propNew != propOld) {
@@ -320,6 +326,8 @@ export default {
                     }
                 }
                 if (upd.length == 0) return;
+                historyObj["what"] = "ändert";
+                historyObj["changes"] = changesArray;
                 msg = team.record_new.updated_at + " " + msg;
                 msg += " updates " + teamName + ": ";
                 historyObj["when"] = team.record_new.updated_at;
